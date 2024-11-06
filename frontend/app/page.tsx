@@ -61,7 +61,7 @@ const PrinterOverviewCard = ({ printer }: { printer: Printer }) => {
         {/* Live camera view placeholder */}
         <img
           className="aspect-video rounded-xl bg-muted/75"
-          src="https://placehold.co/640x360"
+          src="/api/placeholder/640/360"
           alt="Live Camera View"
         />
       </div>
@@ -82,12 +82,14 @@ const PrinterOverviewCard = ({ printer }: { printer: Printer }) => {
           <div>{printer.endTime}</div>
         </div>
       </div>
-      <Button className="mt-2" variant={"secondary"}>
-        <strong>View Details</strong>
-      </Button>
-      <Button className="mt-2" variant={"destructive"}>
-        <strong>Cancel Print</strong>
-      </Button>
+      <div className="flex gap-2 mt-2">
+        <Button className="flex-1" variant="secondary">
+          <strong>View Details</strong>
+        </Button>
+        <Button className="w-30" variant="destructive">
+          <strong>Cancel Print</strong>
+        </Button>
+      </div>
     </div>
   );
 };
