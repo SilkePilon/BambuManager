@@ -1,2 +1,15 @@
 # BamBuLab-Web-Controler
-Control everything about your BamBuLab 3d printer. 
+
+Control everything about your BamBuLab 3d printer.
+
+# Idea list
+
+- [ ] Allow to add multiple printers (popup dialog)
+- [ ] display printers on dashboard.
+- [ ] register and login for users using google or microsoft or email pass.
+- [ ] allow a user to be set as admin or norman user.
+- [ ] use a sqlite database.
+- [ ] users can have a q to wait before a printer becomes abalavol to print, users can see all the printers but cant accsess the controll of that printer if they are not the user who has started the print. They can only see the live view and print time remaining and the eta end time.
+- [ ] allow users to upload a gcode file to print.
+- [ ] add an qeuwe so users can upload a set of files (gcode) and then it waits.
+- [ ] make it so pirnts under 100grams are free and above show a popup that you need to pay
