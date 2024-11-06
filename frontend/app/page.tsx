@@ -85,6 +85,9 @@ const PrinterOverviewCard = ({ printer }: { printer: Printer }) => {
       <Button className="mt-2" variant={"secondary"}>
         <strong>View Details</strong>
       </Button>
+      <Button className="mt-2" variant={"destructive"}>
+        <strong>Cancel Print</strong>
+      </Button>
     </div>
   );
 };
