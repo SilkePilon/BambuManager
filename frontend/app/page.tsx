@@ -48,17 +48,13 @@ interface Printer {
 const PrinterOverviewCard = ({ printer }: { printer: Printer }) => {
   return (
     <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {/* <Camera size={24} /> */}
-          <span className="font-medium">
-            <strong>{printer.name}</strong>
-          </span>
-        </div>
-        <div>
-          <Badge variant="outline">
-            <strong>{printer.username}</strong>
-          </Badge>
+      <div className="">
+        <div className="items-center">
+          <center>
+            <span className="font-medium">
+              <strong>{printer.name}</strong>
+            </span>
+          </center>
         </div>
       </div>
       <div className="aspect-video rounded-xl bg-muted/75">
@@ -70,6 +66,9 @@ const PrinterOverviewCard = ({ printer }: { printer: Printer }) => {
         />
       </div>
       <div className="flex items-center justify-between">
+        <Badge variant="outline">
+          <strong>{printer.username}</strong>
+        </Badge>
         <div>
           <div className="font-medium">
             <strong>Time Remaining</strong>
