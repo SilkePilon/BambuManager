@@ -14,7 +14,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Camera, PlusCircle } from "lucide-react";
+import { Camera, PlusCircle, SettingsIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -89,6 +89,9 @@ const PrinterOverviewCard = ({ printer }: { printer: Printer }) => {
       <div className="flex gap-2 mt-2">
         <Button className="flex-1" variant="secondary">
           <strong>View Details</strong>
+        </Button>
+        <Button className="w-30" variant="secondary">
+          <SettingsIcon size={60} />
         </Button>
         <Button className="w-30" variant="destructive">
           <strong>Cancel Print</strong>
