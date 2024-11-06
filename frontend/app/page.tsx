@@ -61,7 +61,7 @@ const PrinterOverviewCard = ({ printer }: { printer: Printer }) => {
         {/* Live camera view placeholder */}
         <img
           className="aspect-video rounded-xl bg-muted/75"
-          src="/api/placeholder/640/360"
+          src={printer.img}
           alt="Live Camera View"
         />
       </div>
@@ -108,18 +108,21 @@ const Page = () => {
       username: "John Doe",
       timeRemaining: "1h 15m",
       endTime: "5:30 PM",
+      img: "https://cdn.discordapp.com/attachments/1303822106848526346/1303855216151760927/p1s_1.gif?ex=672d454b&is=672bf3cb&hm=d8b79371b0b4c5068e4111a6fe9903d04f7e6dbaf349741b0e08c026d1e365ab&",
     },
     {
       name: "P1S",
       username: "Jane Smith",
       timeRemaining: "2h 30m",
       endTime: "6:45 PM",
+      img: "https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672d454b&is=672bf3cb&hm=31762e2a6fe0791544e63317498c59068a6de241198524b2a896c0868f4eaa24&",
     },
     {
       name: "A1",
       username: "Bob Johnson",
       timeRemaining: "45m",
       endTime: "4:15 PM",
+      img: "https://cdn.discordapp.com/attachments/1303822106848526346/1303855214499205191/a1.gif?ex=672d454b&is=672bf3cb&hm=fc2079b9bb55fae961a4510539e97f5c01f5a04c71968197d405f9597265aef6&",
     },
   ];
 
