@@ -66,9 +66,13 @@ const PrinterOverviewCard = ({ printer }: { printer: Printer }) => {
         />
       </div>
       <div className="flex items-center justify-between">
-        <Badge variant="outline">
-          <strong>{printer.username}</strong>
-        </Badge>
+        <div>
+          <div className="font-medium">
+            <strong>Started by</strong>
+          </div>
+          <div>{printer.username}</div>
+        </div>
+
         <div>
           <div className="font-medium">
             <strong>Time Remaining</strong>
