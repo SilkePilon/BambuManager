@@ -43,6 +43,7 @@ interface Printer {
   username: string;
   timeRemaining: string;
   endTime: string;
+  img: string;
 }
 
 const PrinterOverviewCard = ({ printer }: { printer: Printer }) => {
