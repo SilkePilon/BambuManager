@@ -301,7 +301,7 @@ export default function PrinterInfoCard({
   const getBorderColor = () => {
     switch (printerStatus) {
       case "printing":
-        return "border-purple-500";
+        return "border-purple-500 border-4";
       case "idle":
         return "border-orange-500";
       case "completed":
@@ -729,7 +729,7 @@ export default function PrinterInfoCard({
                 onClick={handleApplyChanges}
                 className="mr-2 bg-green-500 hover:bg-green-600"
                 variant={"secondary"}
-                disabled={printerStatus === "printing" || isApplying}
+                // disabled={printerStatus === "printing" || isApplying}
               >
                 {isApplying ? (
                   <>
@@ -739,7 +739,7 @@ export default function PrinterInfoCard({
                 ) : (
                   <strong>
                     {printerStatus === "printing"
-                      ? "Cannot Apply While Printing"
+                      ? "Apply While Printing"
                       : "Apply Changes"}
                   </strong>
                 )}

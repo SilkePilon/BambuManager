@@ -60,7 +60,7 @@ const Page = () => {
       printTime: "1h 30m",
       startedBy: "John Doe",
       cameraUrl:
-        "https://cdn.discordapp.com/attachments/1303822106848526346/1303855216151760927/p1s_1.gif?ex=672d454b&is=672bf3cb&hm=d8b79371b0b4c5068e4111a6fe9903d04f7e6dbaf349741b0e08c026d1e365ab&",
+        "https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672f3f8b&is=672dee0b&hm=dd80d6687d7f8d33b719b6b65f145c50ec727ac4c4b29b15e922b4d80e3c02d5&",
       filamentType: "PLA",
       layerHeight: 0.2,
       printProgress: 65,
@@ -79,7 +79,7 @@ const Page = () => {
       printTime: "2h 15m",
       startedBy: "Jane Smith",
       cameraUrl:
-        "https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672d454b&is=672bf3cb&hm=31762e2a6fe0791544e63317498c59068a6de241198524b2a896c0868f4eaa24&",
+        "https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672f3f8b&is=672dee0b&hm=dd80d6687d7f8d33b719b6b65f145c50ec727ac4c4b29b15e922b4d80e3c02d5&",
       filamentType: "PETG",
       layerHeight: 0.15,
       printProgress: 42,
@@ -96,7 +96,7 @@ const Page = () => {
       printTime: "45m",
       startedBy: "Bob Johnson",
       cameraUrl:
-        "https://cdn.discordapp.com/attachments/1303822106848526346/1303855214499205191/a1.gif?ex=672d454b&is=672bf3cb&hm=fc2079b9bb55fae961a4510539e97f5c01f5a04c71968197d405f9597265aef6&",
+        "https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672f3f8b&is=672dee0b&hm=dd80d6687d7f8d33b719b6b65f145c50ec727ac4c4b29b15e922b4d80e3c02d5&",
       filamentType: "ABS",
       layerHeight: 0.1,
       printProgress: 80,
@@ -178,7 +178,9 @@ const Page = () => {
                   totalLayers={printer.totalLayers}
                   estimatedTimeLeft={printer.estimatedTimeLeft}
                   stlUrl={printer.stlUrl}
-                  isPrinting={printer.isPrinting}
+                  printerStatus="printing"
+                  lightOn={true}
+                  fanSpeed={50}
                   onStopPrint={() => {
                     // Handle stop print logic here
                     console.log(`Stopping print for ${printer.name}`);
@@ -211,6 +213,20 @@ const Page = () => {
                   onPrintSpeedChange={(speed) => {
                     // Handle print speed change
                     console.log(`New print speed for ${printer.name}:`, speed);
+                  }}
+                  onFanSpeedChange={(speed) => {
+                    // Handle fan speed change
+                    console.log(`New fan speed for ${printer.name}:`, speed);
+                  }}
+                  onLightToggle={(on) => {
+                    // Handle light toggle
+                    console.log(
+                      `Light for ${printer.name} turned ${on ? "on" : "off"}`
+                    );
+                  }}
+                  onDownloadTimelapse={() => {
+                    // Handle download timelapse
+                    console.log(`Downloading timelapse for ${printer.name}`);
                   }}
                 />
               ))}
