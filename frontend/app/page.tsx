@@ -53,7 +53,7 @@ interface Printer {
 const Page = () => {
   const [printers, setPrinters] = useState<Printer[]>([
     {
-      name: "Stalker",
+      name: "Creeper",
       type: "P1S",
       hotendTemp: 210,
       bedTemp: 60,
@@ -72,7 +72,7 @@ const Page = () => {
       isPrinting: true,
     },
     {
-      name: "Creeper",
+      name: "Awww",
       type: "P1S",
       hotendTemp: 200,
       bedTemp: 55,
@@ -89,7 +89,7 @@ const Page = () => {
       isPrinting: true,
     },
     {
-      name: "Speedy",
+      name: "Man",
       type: "A1",
       hotendTemp: 180,
       bedTemp: 50,
