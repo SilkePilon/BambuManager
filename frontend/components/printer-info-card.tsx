@@ -17,6 +17,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -312,12 +322,12 @@ export default function PrinterInfoCard({
         </CardContent>
       </Card>
 
-      <AlertDialog open={showDetails} onOpenChange={setShowDetails}>
-        <AlertDialogContent className="max-w-3xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Print Details for {printerName}</AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogDescription>
+      <Dialog open={showDetails} onOpenChange={setShowDetails}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Print Details for {printerName}</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -451,8 +461,8 @@ export default function PrinterInfoCard({
                 </div>
               </div>
             </div>
-          </AlertDialogDescription>
-          <AlertDialogFooter>
+          </DialogDescription>
+          <DialogFooter>
             {unsavedChanges && (
               <Button
                 onClick={handleApplyChanges}
@@ -468,9 +478,9 @@ export default function PrinterInfoCard({
             >
               <strong>{unsavedChanges ? "Cancel" : "Close"}</strong>
             </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog
         open={showUnsavedChangesAlert}
