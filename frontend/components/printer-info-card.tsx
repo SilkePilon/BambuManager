@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
-import { GCodeViewer } from "react-gcode-viewer";
+import { GCodeViewer } from "../react-gcode-viewer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -349,11 +349,13 @@ export default function PrinterInfoCard({
                 />
                 {gcodeUrl && (
                   <div className="absolute bottom-2 right-2 flex flex-col gap-2">
+                    <Switch
+                      checked={showGCode}
+                      style={{ height: "20px", width: "60px" }}
+                      onCheckedChange={() => setShowGCode(!showGCode)}
+                    />
+
                     <Badge variant="secondary">
-                      <Switch
-                        checked={showGCode}
-                        onCheckedChange={() => setShowGCode(!showGCode)}
-                      />
                       <span className="ml-2">
                         {showGCode ? "GCode" : "Live"}
                       </span>

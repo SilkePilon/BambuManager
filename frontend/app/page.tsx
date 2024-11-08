@@ -74,7 +74,7 @@ const Page = () => {
       totalLayers: 100,
       estimatedTimeLeft: "45m",
       gcodeUrl:
-        "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/refs/heads/main/2.0/Box/glTF/Box.gltf",
+        "https://raw.githubusercontent.com/SilkePilon/BambuManager/refs/heads/main/examples/gcode/1.gcode",
       isPrinting: true,
     },
     {
