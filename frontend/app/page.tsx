@@ -46,7 +46,10 @@ interface Printer {
   layerProgress: number;
   totalLayers: number;
   estimatedTimeLeft: string;
-  stlUrl?: string;
+  gcodeUrl?: string;
+  printerStatus: "printing" | "completed" | "idle";
+  lightOn: boolean;
+  fanSpeed: number;
   isPrinting: boolean;
 }
 
@@ -58,6 +61,9 @@ const Page = () => {
       hotendTemp: 210,
       bedTemp: 60,
       printTime: "1h 30m",
+      printerStatus: "printing",
+      fanSpeed: 100,
+      lightOn: true,
       startedBy: "John Doe",
       cameraUrl:
         "https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672f3f8b&is=672dee0b&hm=dd80d6687d7f8d33b719b6b65f145c50ec727ac4c4b29b15e922b4d80e3c02d5&",
@@ -67,7 +73,7 @@ const Page = () => {
       layerProgress: 42,
       totalLayers: 100,
       estimatedTimeLeft: "45m",
-      stlUrl:
+      gcodeUrl:
         "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/refs/heads/main/2.0/Box/glTF/Box.gltf",
       isPrinting: true,
     },
@@ -77,6 +83,9 @@ const Page = () => {
       hotendTemp: 200,
       bedTemp: 55,
       printTime: "2h 15m",
+      printerStatus: "idle",
+      fanSpeed: 100,
+      lightOn: true,
       startedBy: "Jane Smith",
       cameraUrl:
         "https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672f3f8b&is=672dee0b&hm=dd80d6687d7f8d33b719b6b65f145c50ec727ac4c4b29b15e922b4d80e3c02d5&",
@@ -91,9 +100,12 @@ const Page = () => {
     {
       name: "Man",
       type: "A1",
-      hotendTemp: 180,
-      bedTemp: 50,
-      printTime: "45m",
+      hotendTemp: 0,
+      bedTemp: 0,
+      printTime: "0m",
+      printerStatus: "completed",
+      fanSpeed: 100,
+      lightOn: true,
       startedBy: "Bob Johnson",
       cameraUrl:
         "https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672f3f8b&is=672dee0b&hm=dd80d6687d7f8d33b719b6b65f145c50ec727ac4c4b29b15e922b4d80e3c02d5&",
@@ -121,6 +133,9 @@ const Page = () => {
         startedBy: "",
         cameraUrl: "/placeholder.svg?height=200&width=320",
         filamentType: "",
+        printerStatus: "idle",
+        lightOn: false,
+        fanSpeed: 0,
         layerHeight: 0,
         printProgress: 0,
         layerProgress: 0,
@@ -177,10 +192,10 @@ const Page = () => {
                   layerProgress={printer.layerProgress}
                   totalLayers={printer.totalLayers}
                   estimatedTimeLeft={printer.estimatedTimeLeft}
-                  stlUrl={printer.stlUrl}
-                  printerStatus="printing"
-                  lightOn={true}
-                  fanSpeed={50}
+                  gcodeUrl={printer.gcodeUrl}
+                  printerStatus={printer.printerStatus}
+                  lightOn={printer.lightOn}
+                  fanSpeed={printer.fanSpeed}
                   onStopPrint={() => {
                     // Handle stop print logic here
                     console.log(`Stopping print for ${printer.name}`);

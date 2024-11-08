@@ -1,10 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
-import { useState, useEffect, Suspense } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { GCodeViewer } from "react-gcode-viewer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,34 +55,11 @@ import {
   Check,
   ChevronsUpDown,
   Download,
+  Play,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-class ErrorBoundary extends React.Component<{
-  children: React.ReactNode;
-  fallback: React.ReactNode;
-  onError?: () => void;
-}> {
-  state = { hasError: false };
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Error loading 3D model:", error, errorInfo);
-    this.props.onError?.();
-  }
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback;
-    }
-    return this.props.children;
-  }
-}
-
-function Model({ url }: { url: string }) {
-  const { scene } = useGLTF(url);
-  return <primitive object={scene} />;
-}
+import { Switch } from "@/components/ui/switch";
 
 interface PrinterInfoCardProps {
   printerName: string;
@@ -100,7 +75,7 @@ interface PrinterInfoCardProps {
   layerProgress: number;
   totalLayers: number;
   estimatedTimeLeft: string;
-  stlUrl?: string;
+  gcodeUrl?: string;
   printerStatus: "printing" | "idle" | "completed";
   fanSpeed: number;
   lightOn: boolean;
@@ -166,45 +141,40 @@ const printSpeedOptions = [
 ];
 
 export default function PrinterInfoCard({
-  printerName = "Stalker",
-  printerType = "P1S",
-  hotendTemp = 200,
-  bedTemp = 60,
-  printTime = "2h 45m",
-  startedBy = "John Doe",
+  printerName = "Printer",
+  printerType = "Unknown",
+  hotendTemp = 0,
+  bedTemp = 0,
+  printTime = "0h 0m",
+  startedBy = "Unknown",
   cameraUrl = "/placeholder.svg?height=200&width=320",
   filamentType = "PLA",
   layerHeight = 0.2,
-  printProgress = 65,
-  layerProgress = 42,
-  totalLayers = 100,
-  estimatedTimeLeft = "1h 15m",
-  stlUrl,
+  printProgress = 0,
+  layerProgress = 0,
+  totalLayers = 0,
+  estimatedTimeLeft = "0h 0m",
+  gcodeUrl,
   printerStatus = "idle",
-  fanSpeed = 50,
+  fanSpeed = 0,
   lightOn = false,
-  onStopPrint = () => console.log("Stop print clicked"),
-  onHotendTempChange = (temp: number) =>
-    console.log("Hotend temp changed:", temp),
-  onBedTempChange = (temp: number) => console.log("Bed temp changed:", temp),
-  onLayerHeightChange = (height: number) =>
-    console.log("Layer height changed:", height),
-  onFilamentTypeChange = (type: string) =>
-    console.log("Filament type changed:", type),
-  onPrintSpeedChange = (speed: string | number) =>
-    console.log("Print speed changed:", speed),
-  onFanSpeedChange = (speed: number) =>
-    console.log("Fan speed changed:", speed),
-  onLightToggle = (on: boolean) => console.log("Light toggled:", on),
-  onDownloadTimelapse = () => console.log("Download timelapse clicked"),
+  onStopPrint = () => {},
+  onHotendTempChange = () => {},
+  onBedTempChange = () => {},
+  onLayerHeightChange = () => {},
+  onFilamentTypeChange = () => {},
+  onPrintSpeedChange = () => {},
+  onFanSpeedChange = () => {},
+  onLightToggle = () => {},
+  onDownloadTimelapse = () => {},
 }: PrinterInfoCardProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const [showModel, setShowModel] = useState(false);
-  const [modelError, setModelError] = useState(false);
+  const [showGCode, setShowGCode] = useState(false);
   const [customSpeed, setCustomSpeed] = useState<number | null>(null);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [showUnsavedChangesAlert, setShowUnsavedChangesAlert] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [showStartPrintDialog, setShowStartPrintDialog] = useState(false);
 
   const [tempHotendTemp, setTempHotendTemp] = useState(hotendTemp);
   const [tempBedTemp, setTempBedTemp] = useState(bedTemp);
@@ -278,7 +248,6 @@ export default function PrinterInfoCard({
   const handleConfirmClose = () => {
     setShowUnsavedChangesAlert(false);
     setShowDetails(false);
-    // Reset temporary values
     setTempHotendTemp(hotendTemp);
     setTempBedTemp(bedTemp);
     setTempLayerHeight(layerHeight);
@@ -301,33 +270,42 @@ export default function PrinterInfoCard({
   const getBorderColor = () => {
     switch (printerStatus) {
       case "printing":
-        return "border-purple-500 border-4";
+        return "border-purple-500";
       case "idle":
-        return "border-orange-500 border-4";
+        return "border-orange-500";
       case "completed":
-        return "border-green-500 border-4";
+        return "border-green-500";
       default:
-        return "border-gray-200 border-4";
+        return "border-gray-200";
     }
   };
 
   const getBackgroundColor = () => {
     switch (printerStatus) {
       case "printing":
-        return "bg-purple-500 hover:bg-purple-800";
+        return "bg-purple-500 hover:bg-purple-600";
       case "idle":
-        return "bg-orange-500 hover:bg-orange-800";
+        return "bg-orange-500 hover:bg-orange-600";
       case "completed":
-        return "bg-green-500 hover:bg-green-800";
+        return "bg-green-500 hover:bg-green-600";
       default:
-        return "bg-gray-200 hover:bg-gray-800";
+        return "bg-gray-500 hover:bg-gray-600";
     }
+  };
+
+  const handleStartPrint = () => {
+    console.log("Starting new print");
+    setShowStartPrintDialog(false);
+  };
+
+  const handleSetIdle = () => {
+    console.log("Setting printer to idle");
   };
 
   return (
     <>
       <Card
-        className={`w-full max-w-sm rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg border-2 ${getBorderColor()}`}
+        className={`w-full max-w-sm rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg ${getBorderColor()} border-4`}
       >
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
@@ -349,34 +327,18 @@ export default function PrinterInfoCard({
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="relative aspect-video overflow-hidden rounded-md">
-            {showModel && stlUrl ? (
-              <Suspense
-                fallback={
-                  <div className="h-full w-full bg-muted flex items-center justify-center">
-                    Loading 3D model...
-                  </div>
-                }
-              >
-                <ErrorBoundary
-                  fallback={
-                    <div className="h-full w-full bg-muted flex items-center justify-center">
-                      Error loading 3D model
-                    </div>
-                  }
-                  onError={() => setModelError(true)}
-                >
-                  <Canvas>
-                    <ambientLight intensity={0.5} />
-                    <spotLight
-                      position={[10, 10, 10]}
-                      angle={0.15}
-                      penumbra={1}
-                    />
-                    <Model url={stlUrl} />
-                    <OrbitControls />
-                  </Canvas>
-                </ErrorBoundary>
-              </Suspense>
+            {showGCode && gcodeUrl ? (
+              <GCodeViewer
+                orbitControls
+                showAxes
+                style={{
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                }}
+                url={gcodeUrl}
+              />
             ) : (
               <>
                 <Image
@@ -385,12 +347,19 @@ export default function PrinterInfoCard({
                   layout="fill"
                   objectFit="cover"
                 />
-                <Badge
-                  variant={"secondary"}
-                  className="absolute bottom-2 right-2"
-                >
-                  Live
-                </Badge>
+                {gcodeUrl && (
+                  <div className="absolute bottom-2 right-2 flex flex-col gap-2">
+                    <Badge variant="secondary">
+                      <Switch
+                        checked={showGCode}
+                        onCheckedChange={() => setShowGCode(!showGCode)}
+                      />
+                      <span className="ml-2">
+                        {showGCode ? "GCode" : "Live"}
+                      </span>
+                    </Badge>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -418,53 +387,56 @@ export default function PrinterInfoCard({
             </span>
             <span>{startedBy}</span>
           </div>
-          <div
-            className={`grid gap-2 ${
-              !stlUrl || modelError ? "grid-cols-2" : "grid-cols-3"
-            }`}
-          >
-            <Button
-              onClick={() =>
-                printerStatus === "completed"
-                  ? onDownloadTimelapse()
-                  : setShowDetails(true)
-              }
-              className={`flex-1 ${!stlUrl || modelError ? "col-span-1" : ""}`}
-              variant={"secondary"}
-            >
-              {printerStatus === "completed" ? (
-                <>
-                  <Download className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Download Timelapse</span>
-                </>
-              ) : (
-                <>
-                  <Info className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Details</span>
-                </>
-              )}
-            </Button>
-            {stlUrl && !modelError && (
-              <Button
-                onClick={() => setShowModel(!showModel)}
-                variant={showModel ? "secondary" : "outline"}
-                className="flex-1"
-              >
-                <Box className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">
-                  {showModel ? "Live" : "3D"}
-                </span>
-              </Button>
-            )}
-            {printerStatus === "printing" && (
-              <Button
-                variant="destructive"
-                onClick={onStopPrint}
-                className="flex-1"
-              >
-                <X className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Cancel</span>
-              </Button>
+          <div className="grid grid-cols-2 gap-2">
+            {printerStatus === "completed" ? (
+              <>
+                <Button
+                  onClick={onDownloadTimelapse}
+                  className="flex items-center justify-center"
+                  variant="secondary"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  <span className="truncate">Timelapse</span>
+                </Button>
+                <Button
+                  onClick={handleSetIdle}
+                  className="flex items-center justify-center"
+                  variant="secondary"
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  <span className="truncate">Set Idle</span>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={() => setShowDetails(true)}
+                  className="flex items-center justify-center"
+                  variant="secondary"
+                >
+                  <Info className="h-4 w-4 mr-2" />
+                  <span className="truncate">Details</span>
+                </Button>
+                {printerStatus === "printing" ? (
+                  <Button
+                    variant="destructive"
+                    onClick={onStopPrint}
+                    className="flex items-center justify-center"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    <span className="truncate">Cancel</span>
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => setShowStartPrintDialog(true)}
+                    className="flex items-center justify-center"
+                    variant="secondary"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    <span className="truncate">Start Print</span>
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </CardContent>
@@ -501,18 +473,6 @@ export default function PrinterInfoCard({
                   <span>°C</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Layers className="h-5 w-5 text-green-500" />
-                  <span>Layer Height:</span>
-                  <Input
-                    type="number"
-                    value={tempLayerHeight}
-                    onChange={(e) => setTempLayerHeight(Number(e.target.value))}
-                    className="w-20"
-                    step="0.01"
-                  />
-                  <span>mm</span>
-                </div>
-                <div className="flex items-center gap-2">
                   <Droplet className="h-5 w-5 text-purple-500" />
                   <span>Filament Type:</span>
                   <Popover>
@@ -521,6 +481,7 @@ export default function PrinterInfoCard({
                         variant="outline"
                         role="combobox"
                         className="w-[200px] justify-between"
+                        disabled={printerStatus === "printing"}
                       >
                         {tempFilamentType
                           ? filamentOptions.find(
@@ -545,7 +506,6 @@ export default function PrinterInfoCard({
                                 value={filament.value}
                                 onSelect={(value) => {
                                   handleFilamentChange(value);
-                                  setShowDetails(false);
                                 }}
                               >
                                 <div>
@@ -604,7 +564,6 @@ export default function PrinterInfoCard({
                                 value={speed.value}
                                 onSelect={(value) => {
                                   handlePrintSpeedChange(value);
-                                  setShowDetails(false);
                                 }}
                               >
                                 <div>
@@ -684,45 +643,55 @@ export default function PrinterInfoCard({
               <div className="space-y-4">
                 <div className="bg-secondary rounded-md p-2 flex justify-center items-center">
                   <div className="relative aspect-video w-full max-w-full rounded-md overflow-hidden">
-                    <Image
-                      src={cameraUrl}
-                      alt="Printer live view"
-                      fill
-                      className="rounded-md object-contain"
-                    />
+                    {showGCode && gcodeUrl ? (
+                      <GCodeViewer
+                        orbitControls
+                        showAxes
+                        style={{
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                        }}
+                        url={gcodeUrl}
+                      />
+                    ) : (
+                      <Image
+                        src={cameraUrl}
+                        alt="Printer live view"
+                        fill
+                        className="rounded-md object-contain"
+                      />
+                    )}
                   </div>
                 </div>
-                <div className="bg-secondary rounded-md p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-semibold">Print Progress</span>
-                    <span className="font-semibold">{printProgress}%</span>
+                {printerStatus === "printing" && (
+                  <div className="bg-secondary rounded-md p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-semibold">Print Progress</span>
+                      <span className="font-semibold">{printProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4">
+                      <div
+                        className="bg-blue-600 h-2.5 rounded-full"
+                        style={{ width: `${printProgress}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-semibold">Layer Progress</span>
+                      <span className="font-semibold">
+                        {layerProgress} / {totalLayers}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                      <div
+                        className="bg-green-600 h-2.5 rounded-full"
+                        style={{
+                          width: `${(layerProgress / totalLayers) * 100}%`,
+                        }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4">
-                    <div
-                      className="bg-blue-600 h-2.5 rounded-full"
-                      style={{ width: `${printProgress}%` }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-semibold">Layer Progress</span>
-                    <span className="font-semibold">
-                      {layerProgress} / {totalLayers}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                    <div
-                      className="bg-green-600 h-2.5 rounded-full"
-                      style={{
-                        width: `${(layerProgress / totalLayers) * 100}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-                {printerStatus === "completed" && (
-                  <Button onClick={onDownloadTimelapse} className="w-full">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Timelapse
-                  </Button>
                 )}
               </div>
             </div>
@@ -732,8 +701,7 @@ export default function PrinterInfoCard({
               <Button
                 onClick={handleApplyChanges}
                 className="mr-2 bg-green-500 hover:bg-green-600"
-                variant={"secondary"}
-                // disabled={printerStatus === "printing" || isApplying}
+                variant="secondary"
               >
                 {isApplying ? (
                   <>
@@ -781,7 +749,7 @@ export default function PrinterInfoCard({
               <Button
                 onClick={handleConfirmClose}
                 className="bg-red-500 hover:bg-red-600"
-                variant={"destructive"}
+                variant="destructive"
               >
                 <strong>Close Without Saving</strong>
               </Button>
@@ -789,6 +757,94 @@ export default function PrinterInfoCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={showStartPrintDialog}
+        onOpenChange={setShowStartPrintDialog}
+      >
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Start New Print</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            <div className="grid gap-4">
+              <div className="flex items-center justify-center bg-secondary rounded-md p-4">
+                {gcodeUrl ? (
+                  <GCodeViewer
+                    orbitControls
+                    showAxes
+                    style={{
+                      width: "100%",
+                      height: "300px",
+                    }}
+                    url={gcodeUrl}
+                  />
+                ) : (
+                  <div className="text-center">
+                    <p>No GCode file uploaded</p>
+                    <Button className="mt-2">
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload GCode File
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    htmlFor="filamentType"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Filament Type
+                  </label>
+                  <select
+                    id="filamentType"
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                  >
+                    {filamentOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="printSpeed"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Print Speed
+                  </label>
+                  <select
+                    id="printSpeed"
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                  >
+                    {printSpeedOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </DialogDescription>
+          <DialogFooter>
+            <Button
+              onClick={() => setShowStartPrintDialog(false)}
+              variant="outline"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleStartPrint}
+              className="bg-green-500 hover:bg-green-600"
+            >
+              Start Print
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
