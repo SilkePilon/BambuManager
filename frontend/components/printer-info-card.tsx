@@ -303,11 +303,24 @@ export default function PrinterInfoCard({
       case "printing":
         return "border-purple-500 border-4";
       case "idle":
-        return "border-orange-500";
+        return "border-orange-500 border-4";
       case "completed":
-        return "border-green-500";
+        return "border-green-500 border-4";
       default:
-        return "border-gray-200";
+        return "border-gray-200 border-4";
+    }
+  };
+
+  const getBackgroundColor = () => {
+    switch (printerStatus) {
+      case "printing":
+        return "bg-purple-500 hover:bg-purple-800";
+      case "idle":
+        return "bg-orange-500 hover:bg-orange-800";
+      case "completed":
+        return "bg-green-500 hover:bg-green-800";
+      default:
+        return "bg-gray-200 hover:bg-gray-800";
     }
   };
 
@@ -322,16 +335,7 @@ export default function PrinterInfoCard({
               <Printer className="h-5 w-5" />
               {printerType}
             </CardTitle>
-            <Badge
-              className="text-white"
-              variant={
-                printerStatus === "printing"
-                  ? "success"
-                  : printerStatus === "completed"
-                  ? "secondary"
-                  : "secondary"
-              }
-            >
+            <Badge className={`text-xs ${getBackgroundColor()} text-white`}>
               <strong>
                 {printerStatus === "printing"
                   ? "Printing"
