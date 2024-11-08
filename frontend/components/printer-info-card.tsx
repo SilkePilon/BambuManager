@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import Image from "next/image";
 import { useState, useEffect, Suspense } from "react";
@@ -6,20 +7,23 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Dialog,
-  DialogClose,
-  DialogTrigger,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -47,7 +51,14 @@ import {
   Layers,
   Droplet,
   FastForward,
+  Fan,
+  Lightbulb,
+  Loader2,
+  Check,
+  ChevronsUpDown,
+  Download,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 class ErrorBoundary extends React.Component<{
   children: React.ReactNode;
@@ -77,6 +88,7 @@ function Model({ url }: { url: string }) {
 
 interface PrinterInfoCardProps {
   printerName: string;
+  printerType: string;
   hotendTemp: number;
   bedTemp: number;
   printTime: string;
@@ -89,16 +101,73 @@ interface PrinterInfoCardProps {
   totalLayers: number;
   estimatedTimeLeft: string;
   stlUrl?: string;
+  printerStatus: "printing" | "idle" | "completed";
+  fanSpeed: number;
+  lightOn: boolean;
   onStopPrint: () => void;
   onHotendTempChange: (temp: number) => void;
   onBedTempChange: (temp: number) => void;
   onLayerHeightChange: (height: number) => void;
   onFilamentTypeChange: (type: string) => void;
   onPrintSpeedChange: (speed: string | number) => void;
+  onFanSpeedChange: (speed: number) => void;
+  onLightToggle: (on: boolean) => void;
+  onDownloadTimelapse?: () => void;
 }
 
+const filamentOptions = [
+  {
+    value: "PLA",
+    label: "PLA",
+    description: "General purpose, easy to print",
+    hotendTemp: 200,
+    bedTemp: 60,
+  },
+  {
+    value: "ABS",
+    label: "ABS",
+    description: "Durable, heat-resistant",
+    hotendTemp: 230,
+    bedTemp: 110,
+  },
+  {
+    value: "PETG",
+    label: "PETG",
+    description: "Strong, chemical-resistant",
+    hotendTemp: 240,
+    bedTemp: 80,
+  },
+  {
+    value: "TPU",
+    label: "TPU",
+    description: "Flexible, impact-resistant",
+    hotendTemp: 220,
+    bedTemp: 50,
+  },
+  {
+    value: "Nylon",
+    label: "Nylon",
+    description: "Strong, abrasion-resistant",
+    hotendTemp: 250,
+    bedTemp: 70,
+  },
+];
+
+const printSpeedOptions = [
+  { value: "ludicrous", label: "Ludicrous", description: "Decreased quality" },
+  { value: "sport", label: "Sport", description: "Slightly decreased quality" },
+  {
+    value: "standard",
+    label: "Standard",
+    description: "Balanced speed and quality",
+  },
+  { value: "silent", label: "Silent", description: "Increased quality" },
+  { value: "custom", label: "Custom", description: "Set your own speed" },
+];
+
 export default function PrinterInfoCard({
-  printerName = "Ender 3 Pro",
+  printerName = "Stalker",
+  printerType = "P1S",
   hotendTemp = 200,
   bedTemp = 60,
   printTime = "2h 45m",
@@ -111,6 +180,9 @@ export default function PrinterInfoCard({
   totalLayers = 100,
   estimatedTimeLeft = "1h 15m",
   stlUrl,
+  printerStatus = "idle",
+  fanSpeed = 50,
+  lightOn = false,
   onStopPrint = () => console.log("Stop print clicked"),
   onHotendTempChange = (temp: number) =>
     console.log("Hotend temp changed:", temp),
@@ -121,6 +193,10 @@ export default function PrinterInfoCard({
     console.log("Filament type changed:", type),
   onPrintSpeedChange = (speed: string | number) =>
     console.log("Print speed changed:", speed),
+  onFanSpeedChange = (speed: number) =>
+    console.log("Fan speed changed:", speed),
+  onLightToggle = (on: boolean) => console.log("Light toggled:", on),
+  onDownloadTimelapse = () => console.log("Download timelapse clicked"),
 }: PrinterInfoCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [showModel, setShowModel] = useState(false);
@@ -128,6 +204,7 @@ export default function PrinterInfoCard({
   const [customSpeed, setCustomSpeed] = useState<number | null>(null);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [showUnsavedChangesAlert, setShowUnsavedChangesAlert] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
 
   const [tempHotendTemp, setTempHotendTemp] = useState(hotendTemp);
   const [tempBedTemp, setTempBedTemp] = useState(bedTemp);
@@ -136,6 +213,8 @@ export default function PrinterInfoCard({
   const [tempPrintSpeed, setTempPrintSpeed] = useState<string | number>(
     "standard"
   );
+  const [tempFanSpeed, setTempFanSpeed] = useState(fanSpeed);
+  const [tempLightOn, setTempLightOn] = useState(lightOn);
 
   useEffect(() => {
     const hasChanges =
@@ -143,7 +222,9 @@ export default function PrinterInfoCard({
       tempBedTemp !== bedTemp ||
       tempLayerHeight !== layerHeight ||
       tempFilamentType !== filamentType ||
-      tempPrintSpeed !== "standard";
+      tempPrintSpeed !== "standard" ||
+      tempFanSpeed !== fanSpeed ||
+      tempLightOn !== lightOn;
     setUnsavedChanges(hasChanges);
   }, [
     tempHotendTemp,
@@ -151,10 +232,14 @@ export default function PrinterInfoCard({
     tempLayerHeight,
     tempFilamentType,
     tempPrintSpeed,
+    tempFanSpeed,
+    tempLightOn,
     hotendTemp,
     bedTemp,
     layerHeight,
     filamentType,
+    fanSpeed,
+    lightOn,
   ]);
 
   const handlePrintSpeedChange = (value: string) => {
@@ -168,12 +253,18 @@ export default function PrinterInfoCard({
   };
 
   const handleApplyChanges = () => {
-    onHotendTempChange(tempHotendTemp);
-    onBedTempChange(tempBedTemp);
-    onLayerHeightChange(tempLayerHeight);
-    onFilamentTypeChange(tempFilamentType);
-    onPrintSpeedChange(tempPrintSpeed);
-    setUnsavedChanges(false);
+    setIsApplying(true);
+    setTimeout(() => {
+      onHotendTempChange(tempHotendTemp);
+      onBedTempChange(tempBedTemp);
+      onLayerHeightChange(tempLayerHeight);
+      onFilamentTypeChange(tempFilamentType);
+      onPrintSpeedChange(tempPrintSpeed);
+      onFanSpeedChange(tempFanSpeed);
+      onLightToggle(tempLightOn);
+      setUnsavedChanges(false);
+      setIsApplying(false);
+    }, 2000);
   };
 
   const handleCloseDetails = () => {
@@ -194,27 +285,63 @@ export default function PrinterInfoCard({
     setTempFilamentType(filamentType);
     setTempPrintSpeed("standard");
     setCustomSpeed(null);
+    setTempFanSpeed(fanSpeed);
+    setTempLightOn(lightOn);
+  };
+
+  const handleFilamentChange = (value: string) => {
+    const selectedFilament = filamentOptions.find((f) => f.value === value);
+    if (selectedFilament) {
+      setTempFilamentType(value);
+      setTempHotendTemp(selectedFilament.hotendTemp);
+      setTempBedTemp(selectedFilament.bedTemp);
+    }
+  };
+
+  const getBorderColor = () => {
+    switch (printerStatus) {
+      case "printing":
+        return "border-purple-500";
+      case "idle":
+        return "border-orange-500";
+      case "completed":
+        return "border-green-500";
+      default:
+        return "border-gray-200";
+    }
   };
 
   return (
     <>
-      <Card className="w-full max-w-sm overflow-hidden transition-all duration-300 hover:shadow-lg">
+      <Card
+        className={`w-full max-w-sm rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg border-2 ${getBorderColor()}`}
+      >
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg font-bold">
               <Printer className="h-5 w-5" />
-              {printerName}
+              {printerType}
             </CardTitle>
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="/placeholder.svg" alt={startedBy} />
-              <AvatarFallback>
-                {startedBy
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </AvatarFallback>
-            </Avatar>
+            <Badge
+              className="text-white"
+              variant={
+                printerStatus === "printing"
+                  ? "success"
+                  : printerStatus === "completed"
+                  ? "secondary"
+                  : "secondary"
+              }
+            >
+              <strong>
+                {printerStatus === "printing"
+                  ? "Printing"
+                  : printerStatus === "completed"
+                  ? "Completed"
+                  : "Idle"}
+              </strong>
+            </Badge>
           </div>
+          <div className="text-center font-semibold mt-2">{printerName}</div>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="relative aspect-video overflow-hidden rounded-md">
@@ -256,7 +383,7 @@ export default function PrinterInfoCard({
                 />
                 <Badge
                   variant={"secondary"}
-                  className="absolute bottom-2 right-2 text-white"
+                  className="absolute bottom-2 right-2"
                 >
                   Live
                 </Badge>
@@ -293,12 +420,25 @@ export default function PrinterInfoCard({
             }`}
           >
             <Button
-              onClick={() => setShowDetails(true)}
+              onClick={() =>
+                printerStatus === "completed"
+                  ? onDownloadTimelapse()
+                  : setShowDetails(true)
+              }
               className={`flex-1 ${!stlUrl || modelError ? "col-span-1" : ""}`}
               variant={"secondary"}
             >
-              <Info className="mr-2 h-4 w-4" />
-              <strong>Details</strong>
+              {printerStatus === "completed" ? (
+                <>
+                  <Download className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Download Timelapse</span>
+                </>
+              ) : (
+                <>
+                  <Info className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Details</span>
+                </>
+              )}
             </Button>
             {stlUrl && !modelError && (
               <Button
@@ -306,18 +446,22 @@ export default function PrinterInfoCard({
                 variant={showModel ? "secondary" : "outline"}
                 className="flex-1"
               >
-                <Box className="mr-2 h-4 w-4" />
-                {showModel ? "Live" : "3D"}
+                <Box className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">
+                  {showModel ? "Live" : "3D"}
+                </span>
               </Button>
             )}
-            <Button
-              variant="destructive"
-              onClick={onStopPrint}
-              className="flex-1"
-            >
-              <X className="mr-2 h-4 w-4" />
-              <strong>Cancel Print</strong>
-            </Button>
+            {printerStatus === "printing" && (
+              <Button
+                variant="destructive"
+                onClick={onStopPrint}
+                className="flex-1"
+              >
+                <X className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Cancel</span>
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -325,7 +469,7 @@ export default function PrinterInfoCard({
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Print Details for {printerName}</DialogTitle>
+            <DialogTitle>Print Details for {printerType}</DialogTitle>
           </DialogHeader>
           <DialogDescription>
             <div className="grid grid-cols-2 gap-4">
@@ -367,31 +511,119 @@ export default function PrinterInfoCard({
                 <div className="flex items-center gap-2">
                   <Droplet className="h-5 w-5 text-purple-500" />
                   <span>Filament Type:</span>
-                  <Input
-                    type="text"
-                    value={tempFilamentType}
-                    onChange={(e) => setTempFilamentType(e.target.value)}
-                    className="w-24"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-[200px] justify-between"
+                      >
+                        {tempFilamentType
+                          ? filamentOptions.find(
+                              (filament) => filament.value === tempFilamentType
+                            )?.label
+                          : "Select filament..."}
+                        <ChevronsUpDown className="opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search filament..."
+                          className="h-9"
+                        />
+                        <CommandList className="max-h-[200px] overflow-y-auto">
+                          <CommandEmpty>No filament found.</CommandEmpty>
+                          <CommandGroup>
+                            {filamentOptions.map((filament) => (
+                              <CommandItem
+                                key={filament.value}
+                                value={filament.value}
+                                onSelect={(value) => {
+                                  handleFilamentChange(value);
+                                  setShowDetails(false);
+                                }}
+                              >
+                                <div>
+                                  {filament.label}
+                                  <p className="text-sm text-gray-500">
+                                    {filament.description}
+                                  </p>
+                                </div>
+                                <Check
+                                  className={cn(
+                                    "ml-auto",
+                                    tempFilamentType === filament.value
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="flex items-center gap-2">
                   <FastForward className="h-5 w-5 text-yellow-500" />
                   <span>Print Speed:</span>
-                  <Select
-                    onValueChange={handlePrintSpeedChange}
-                    value={tempPrintSpeed.toString()}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select speed" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ludicrous">Ludicrous</SelectItem>
-                      <SelectItem value="sport">Sport</SelectItem>
-                      <SelectItem value="standard">Standard</SelectItem>
-                      <SelectItem value="silent">Silent</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-[200px] justify-between"
+                      >
+                        {tempPrintSpeed.toString()
+                          ? printSpeedOptions.find(
+                              (speed) =>
+                                speed.value === tempPrintSpeed.toString()
+                            )?.label
+                          : "Select speed..."}
+                        <ChevronsUpDown className="opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search speed..."
+                          className="h-9"
+                        />
+                        <CommandList className="max-h-[200px] overflow-y-auto">
+                          <CommandEmpty>No speed found.</CommandEmpty>
+                          <CommandGroup>
+                            {printSpeedOptions.map((speed) => (
+                              <CommandItem
+                                key={speed.value}
+                                value={speed.value}
+                                onSelect={(value) => {
+                                  handlePrintSpeedChange(value);
+                                  setShowDetails(false);
+                                }}
+                              >
+                                <div>
+                                  {speed.label}
+                                  <p className="text-sm text-gray-500">
+                                    {speed.description}
+                                  </p>
+                                </div>
+                                <Check
+                                  className={cn(
+                                    "ml-auto",
+                                    tempPrintSpeed.toString() === speed.value
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   {customSpeed !== null && (
                     <Input
                       type="number"
@@ -405,6 +637,29 @@ export default function PrinterInfoCard({
                     />
                   )}
                   {customSpeed !== null && <span>%</span>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Fan className="h-5 w-5 text-cyan-500" />
+                  <span>Fan Speed:</span>
+                  <Input
+                    type="number"
+                    value={tempFanSpeed}
+                    onChange={(e) => setTempFanSpeed(Number(e.target.value))}
+                    className="w-20"
+                    min="0"
+                    max="100"
+                  />
+                  <span>%</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5 text-amber-500" />
+                  <span>Printer Light:</span>
+                  <Button
+                    variant={tempLightOn ? "default" : "outline"}
+                    onClick={() => setTempLightOn(!tempLightOn)}
+                  >
+                    {tempLightOn ? "On" : "Off"}
+                  </Button>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-orange-500" />
@@ -459,6 +714,12 @@ export default function PrinterInfoCard({
                     ></div>
                   </div>
                 </div>
+                {printerStatus === "completed" && (
+                  <Button onClick={onDownloadTimelapse} className="w-full">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Timelapse
+                  </Button>
+                )}
               </div>
             </div>
           </DialogDescription>
@@ -468,8 +729,20 @@ export default function PrinterInfoCard({
                 onClick={handleApplyChanges}
                 className="mr-2 bg-green-500 hover:bg-green-600"
                 variant={"secondary"}
+                disabled={printerStatus === "printing" || isApplying}
               >
-                <strong>Apply Changes</strong>
+                {isApplying ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Please wait
+                  </>
+                ) : (
+                  <strong>
+                    {printerStatus === "printing"
+                      ? "Cannot Apply While Printing"
+                      : "Apply Changes"}
+                  </strong>
+                )}
               </Button>
             )}
             <Button
