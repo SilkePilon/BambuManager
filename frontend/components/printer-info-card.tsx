@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import { useState, useEffect, Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
@@ -237,10 +238,11 @@ export default function PrinterInfoCard({
               </Suspense>
             ) : (
               <>
-                <img
+                <Image
                   src={cameraUrl}
                   alt="Printer live view"
-                  className="h-full w-full object-cover"
+                  layout="fill"
+                  objectFit="cover"
                 />
                 <Badge
                   variant={"secondary"}
@@ -413,12 +415,11 @@ export default function PrinterInfoCard({
               <div className="space-y-4">
                 <div className="bg-secondary rounded-md p-2 flex justify-center items-center">
                   <div className="relative aspect-video w-full max-w-full rounded-md overflow-hidden">
-                    <img
+                    <Image
                       src={cameraUrl}
                       alt="Printer live view"
-                      layout="fill"
-                      objectFit="contain"
-                      className="rounded-md"
+                      fill
+                      className="rounded-md object-contain"
                     />
                   </div>
                 </div>
