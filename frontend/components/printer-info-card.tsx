@@ -47,7 +47,7 @@ class ErrorBoundary extends React.Component<{
   static getDerivedStateFromError() {
     return { hasError: true };
   }
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("Error loading 3D model:", error, errorInfo);
     this.props.onError?.();
   }
