@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import {
@@ -28,15 +29,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import PrinterInfoCard from "@/components/printer-info-card";
 
 interface Printer {
   name: string;
@@ -48,57 +41,45 @@ interface Printer {
 
 const PrinterOverviewCard = ({ printer }: { printer: Printer }) => {
   return (
-    <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-4">
-      <div className="">
-        <div className="items-center">
-          <center>
-            <span className="font-medium">
-              <strong>{printer.name}</strong>
-            </span>
-          </center>
-        </div>
-      </div>
-      <div className="aspect-video rounded-xl bg-muted/75">
-        {/* Live camera view placeholder */}
-        <img
-          className="aspect-video rounded-xl bg-muted/75"
-          src={printer.img}
-          alt="Live Camera View"
-        />
-      </div>
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="font-medium">
-            <strong>Started by</strong>
-          </div>
-          <div>{printer.username}</div>
-        </div>
-
-        <div>
-          <div className="font-medium">
-            <strong>Time Remaining</strong>
-          </div>
-          <div>{printer.timeRemaining}</div>
-        </div>
-        <div>
-          <div className="font-medium">
-            <strong>End Time</strong>
-          </div>
-          <div>{printer.endTime}</div>
-        </div>
-      </div>
-      <div className="flex gap-2 mt-2">
-        <Button className="flex-1" variant="secondary">
-          <strong>View Details</strong>
-        </Button>
-        <Button className="w-30" variant="secondary">
-          <SettingsIcon size={60} />
-        </Button>
-        <Button className="w-30" variant="destructive">
-          <strong>Cancel Print</strong>
-        </Button>
-      </div>
-    </div>
+    <PrinterInfoCard
+      printerName={printer.name}
+      hotendTemp={210}
+      bedTemp={70}
+      printTime="1h 30m"
+      startedBy="Jane Smith"
+      cameraUrl="https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672e96cb&is=672d454b&hm=ef1d070d82990e511c411811d63163a8b2ebe208123cda13e2603a0491511508&"
+      filamentType="PETG"
+      layerHeight={0.15}
+      printProgress={42}
+      layerProgress={105}
+      totalLayers={250}
+      estimatedTimeLeft="2h 10m"
+      stlUrl="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/refs/heads/main/2.0/Box/glTF/Box.gltf"
+      onStopPrint={() => {
+        // Handle stop print logic here
+        console.log("Stopping print for Prusa i3 MK3S+");
+      }}
+      onHotendTempChange={(temp) => {
+        // Handle hotend temperature change
+        console.log("New hotend temperature:", temp);
+      }}
+      onBedTempChange={(temp) => {
+        // Handle bed temperature change
+        console.log("New bed temperature:", temp);
+      }}
+      onLayerHeightChange={(height) => {
+        // Handle layer height change
+        console.log("New layer height:", height);
+      }}
+      onFilamentTypeChange={(type) => {
+        // Handle filament type change
+        console.log("New filament type:", type);
+      }}
+      onPrintSpeedChange={(speed) => {
+        // Handle print speed change
+        console.log("New print speed:", speed);
+      }}
+    />
   );
 };
 
