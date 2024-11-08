@@ -235,10 +235,12 @@ const Page = () => {
           <Separator className="my-4" />
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Printer
-              </Button>
+              <center>
+                <Button style={{ width: "10vw" }} className="sm:w-auto">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Printer
+                </Button>
+              </center>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
