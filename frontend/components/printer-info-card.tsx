@@ -505,9 +505,9 @@ export default function PrinterInfoCard({
                   {printerStatus === "printing" ? (
                     <motion.div whileTap={{ scale: 0.95 }}>
                       <Button
-                        variant="destructive"
+                        // variant="destructive"
                         onClick={() => setShowCancelPrintDialog(true)}
-                        className="flex items-center justify-center w-full"
+                        className="flex items-center justify-center w-full bg-red-500 hover:bg-red-600 text-white"
                         disabled={isLoading["stopPrint"]}
                       >
                         {isLoading["stopPrint"] ? (
@@ -1226,7 +1226,7 @@ export default function PrinterInfoCard({
                 className="bg-red-500 hover:bg-red-600"
                 variant="destructive"
               >
-                <strong>Stop Print</strong>
+                <strong>Cancel Print</strong>
               </Button>
             </AlertDialogAction>
           </AlertDialogFooter>
