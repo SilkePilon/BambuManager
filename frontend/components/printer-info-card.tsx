@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { GCodeViewer } from "../react-gcode-viewer";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,8 +45,6 @@ import {
   User,
   Info,
   X,
-  Box,
-  Layers,
   Droplet,
   FastForward,
   Fan,
@@ -59,7 +57,6 @@ import {
   Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Switch } from "@/components/ui/switch";
 
 interface PrinterInfoCardProps {
   printerName: string;
@@ -69,13 +66,13 @@ interface PrinterInfoCardProps {
   printTime: string;
   startedBy: string;
   cameraUrl: string;
+  fallbackImageUrl: string;
   filamentType: string;
   layerHeight: number;
   printProgress: number;
   layerProgress: number;
   totalLayers: number;
   estimatedTimeLeft: string;
-  gcodeUrl?: string;
   printerStatus: "printing" | "idle" | "completed";
   fanSpeed: number;
   lightOn: boolean;
@@ -88,6 +85,7 @@ interface PrinterInfoCardProps {
   onFanSpeedChange: (speed: number) => void;
   onLightToggle: (on: boolean) => void;
   onDownloadTimelapse?: () => void;
+  onUploadGcode: (file: File) => Promise<void>;
 }
 
 const filamentOptions = [
@@ -148,13 +146,13 @@ export default function PrinterInfoCard({
   printTime = "0h 0m",
   startedBy = "Unknown",
   cameraUrl = "/placeholder.svg?height=200&width=320",
+  fallbackImageUrl = "/placeholder.svg?height=200&width=320",
   filamentType = "PLA",
   layerHeight = 0.2,
   printProgress = 0,
   layerProgress = 0,
   totalLayers = 0,
   estimatedTimeLeft = "0h 0m",
-  gcodeUrl,
   printerStatus = "idle",
   fanSpeed = 0,
   lightOn = false,
@@ -167,14 +165,16 @@ export default function PrinterInfoCard({
   onFanSpeedChange = () => {},
   onLightToggle = () => {},
   onDownloadTimelapse = () => {},
+  onUploadGcode = async () => {},
 }: PrinterInfoCardProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const [showGCode, setShowGCode] = useState(false);
   const [customSpeed, setCustomSpeed] = useState<number | null>(null);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [showUnsavedChangesAlert, setShowUnsavedChangesAlert] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [showStartPrintDialog, setShowStartPrintDialog] = useState(false);
+  const [liveViewError, setLiveViewError] = useState(false);
+  const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
 
   const [tempHotendTemp, setTempHotendTemp] = useState(hotendTemp);
   const [tempBedTemp, setTempBedTemp] = useState(bedTemp);
@@ -185,6 +185,7 @@ export default function PrinterInfoCard({
   );
   const [tempFanSpeed, setTempFanSpeed] = useState(fanSpeed);
   const [tempLightOn, setTempLightOn] = useState(lightOn);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   useEffect(() => {
     const hasChanges =
@@ -211,6 +212,13 @@ export default function PrinterInfoCard({
     fanSpeed,
     lightOn,
   ]);
+
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setLiveViewError(Math.random() > 0.5); // 50% chance of error
+  //   }, 2000);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   const handlePrintSpeedChange = (value: string) => {
     if (value === "custom") {
@@ -293,156 +301,233 @@ export default function PrinterInfoCard({
     }
   };
 
-  const handleStartPrint = () => {
-    console.log("Starting new print");
+  const handleStartPrint = async () => {
+    setIsLoading({ startPrint: true });
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    if (uploadedFile) {
+      await onUploadGcode(uploadedFile);
+    }
     setShowStartPrintDialog(false);
+    setIsLoading({ startPrint: false });
   };
 
-  const handleSetIdle = () => {
+  const handleSetIdle = async () => {
+    setIsLoading({ setIdle: true });
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     console.log("Setting printer to idle");
+    setIsLoading({ setIdle: false });
+  };
+
+  const handleButtonClick = async (action: string, callback: () => void) => {
+    setIsLoading({ [action]: true });
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    callback();
+    setIsLoading({ [action]: false });
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+    }
   };
 
   return (
     <>
-      <Card
-        className={`w-full max-w-sm rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg ${getBorderColor()} border-4`}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
       >
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-lg font-bold">
-              <Printer className="h-5 w-5" />
-              {printerType}
-            </CardTitle>
-            <Badge className={`text-xs ${getBackgroundColor()} text-white`}>
-              <strong>
-                {printerStatus === "printing"
-                  ? "Printing"
-                  : printerStatus === "completed"
-                  ? "Completed"
-                  : "Idle"}
-              </strong>
-            </Badge>
-          </div>
-          <div className="text-center font-semibold mt-2">{printerName}</div>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="relative aspect-video overflow-hidden rounded-md">
-            {showGCode && gcodeUrl ? (
-              <GCodeViewer
-                orbitControls
-                showAxes
-                style={{
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                }}
-                url={gcodeUrl}
-              />
-            ) : (
-              <>
+        <Card
+          className={`w-full max-w-sm rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg ${getBorderColor()} border-4`}
+        >
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                <Printer className="h-5 w-5" />
+                {printerType}
+              </CardTitle>
+              <Badge className={`text-xs ${getBackgroundColor()} text-white`}>
+                <strong>
+                  {printerStatus === "printing"
+                    ? "Printing"
+                    : printerStatus === "completed"
+                    ? "Completed"
+                    : "Idle"}
+                </strong>
+              </Badge>
+            </div>
+            <div className="text-center font-semibold mt-2">{printerName}</div>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="relative aspect-video overflow-hidden rounded-md">
+              {liveViewError ? (
+                <Image
+                  src={fallbackImageUrl}
+                  alt="Printer fallback view"
+                  layout="fill"
+                  objectFit="cover"
+                />
+              ) : (
                 <Image
                   src={cameraUrl}
                   alt="Printer live view"
                   layout="fill"
                   objectFit="cover"
                 />
-                {gcodeUrl && (
-                  <div className="absolute bottom-2 right-2 flex flex-col gap-2">
-                    <Switch
-                      checked={showGCode}
-                      style={{ height: "20px", width: "60px" }}
-                      onCheckedChange={() => setShowGCode(!showGCode)}
-                    />
-
-                    <Badge variant="secondary">
-                      <span className="ml-2">
-                        {showGCode ? "GCode" : "Live"}
-                      </span>
-                    </Badge>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div className="flex flex-col items-center justify-center">
-              <Thermometer className="h-5 w-5 text-red-500" />
-              <span className="mt-1 font-semibold">{hotendTemp}°C</span>
-              <span className="text-xs text-muted-foreground">Hotend</span>
+              )}
+              <div className="absolute bottom-2 right-2 flex flex-col gap-2">
+                <Badge variant="secondary">
+                  <span className="">
+                    {liveViewError ? "Error loading live view" : "Live"}
+                  </span>
+                </Badge>
+              </div>
             </div>
-            <div className="flex flex-col items-center justify-center">
-              <Thermometer className="h-5 w-5 text-blue-500" />
-              <span className="mt-1 font-semibold">{bedTemp}°C</span>
-              <span className="text-xs text-muted-foreground">Bed</span>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="flex flex-col items-center justify-center">
+                <Thermometer className="h-5 w-5 text-red-500" />
+                <span className="mt-1 font-semibold">{hotendTemp}°C</span>
+                <span className="text-xs text-muted-foreground">Hotend</span>
+              </div>
+              <div className="flex flex-col items-center justify-center">
+                <Thermometer className="h-5 w-5 text-blue-500" />
+                <span className="mt-1 font-semibold">{bedTemp}°C</span>
+                <span className="text-xs text-muted-foreground">Bed</span>
+              </div>
+              <div className="flex flex-col items-center justify-center">
+                <Clock className="h-5 w-5 text-green-500" />
+                <span className="mt-1 font-semibold">{printTime}</span>
+                <span className="text-xs text-muted-foreground">
+                  Print Time
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col items-center justify-center">
-              <Clock className="h-5 w-5 text-green-500" />
-              <span className="mt-1 font-semibold">{printTime}</span>
-              <span className="text-xs text-muted-foreground">Print Time</span>
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <User className="h-4 w-4" />
+                Started by
+              </span>
+              <span>{startedBy}</span>
             </div>
-          </div>
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <User className="h-4 w-4" />
-              Started by
-            </span>
-            <span>{startedBy}</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {printerStatus === "completed" ? (
-              <>
-                <Button
-                  onClick={onDownloadTimelapse}
-                  className="flex items-center justify-center"
-                  variant="secondary"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  <span className="truncate">Timelapse</span>
-                </Button>
-                <Button
-                  onClick={handleSetIdle}
-                  className="flex items-center justify-center"
-                  variant="secondary"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  <span className="truncate">Set Idle</span>
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  onClick={() => setShowDetails(true)}
-                  className="flex items-center justify-center"
-                  variant="secondary"
-                >
-                  <Info className="h-4 w-4 mr-2" />
-                  <span className="truncate">Details</span>
-                </Button>
-                {printerStatus === "printing" ? (
-                  <Button
-                    variant="destructive"
-                    onClick={onStopPrint}
-                    className="flex items-center justify-center"
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    <span className="truncate">Cancel</span>
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => setShowStartPrintDialog(true)}
-                    className="flex items-center justify-center"
-                    variant="secondary"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    <span className="truncate">Start Print</span>
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            <div className="grid grid-cols-2 gap-2">
+              {printerStatus === "completed" ? (
+                <>
+                  <motion.div whileTap={{ scale: 0.95 }}>
+                    <Button
+                      onClick={() =>
+                        handleButtonClick(
+                          "downloadTimelapse",
+                          onDownloadTimelapse
+                        )
+                      }
+                      className="flex items-center justify-center w-full"
+                      variant="secondary"
+                      disabled={isLoading["downloadTimelapse"]}
+                    >
+                      {isLoading["downloadTimelapse"] ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4 mr-2" />
+                          <span className="truncate">Timelapse</span>
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
+                  <motion.div whileTap={{ scale: 0.95 }}>
+                    <Button
+                      onClick={() =>
+                        handleButtonClick("setIdle", handleSetIdle)
+                      }
+                      className="flex items-center justify-center w-full"
+                      variant="secondary"
+                      disabled={isLoading["setIdle"]}
+                    >
+                      {isLoading["setIdle"] ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 mr-2" />
+                          <span className="truncate">Set Idle</span>
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
+                </>
+              ) : (
+                <>
+                  <motion.div whileTap={{ scale: 0.95 }}>
+                    <Button
+                      onClick={() =>
+                        handleButtonClick("showDetails", () =>
+                          setShowDetails(true)
+                        )
+                      }
+                      className="flex items-center justify-center w-full"
+                      variant="secondary"
+                      disabled={isLoading["showDetails"]}
+                    >
+                      {isLoading["showDetails"] ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Info className="h-4 w-4 mr-2" />
+                          <span className="truncate">Details</span>
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
+                  {printerStatus === "printing" ? (
+                    <motion.div whileTap={{ scale: 0.95 }}>
+                      <Button
+                        variant="destructive"
+                        onClick={() =>
+                          handleButtonClick("stopPrint", onStopPrint)
+                        }
+                        className="flex items-center justify-center w-full"
+                        disabled={isLoading["stopPrint"]}
+                      >
+                        {isLoading["stopPrint"] ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <X className="h-4 w-4 mr-2" />
+                            <span className="truncate">Cancel</span>
+                          </>
+                        )}
+                      </Button>
+                    </motion.div>
+                  ) : (
+                    <motion.div whileTap={{ scale: 0.95 }}>
+                      <Button
+                        onClick={() =>
+                          handleButtonClick("showStartPrintDialog", () =>
+                            setShowStartPrintDialog(true)
+                          )
+                        }
+                        className="flex items-center justify-center w-full"
+                        variant="secondary"
+                        disabled={isLoading["showStartPrintDialog"]}
+                      >
+                        {isLoading["showStartPrintDialog"] ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4 mr-2" />
+                            <span className="truncate">Start Print</span>
+                          </>
+                        )}
+                      </Button>
+                    </motion.div>
+                  )}
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="max-w-3xl">
@@ -452,279 +537,318 @@ export default function PrinterInfoCard({
           <DialogDescription>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Thermometer className="h-5 w-5 text-red-500" />
-                  <span>Hotend Temperature:</span>
-                  <Input
-                    type="number"
-                    value={tempHotendTemp}
-                    onChange={(e) => setTempHotendTemp(Number(e.target.value))}
-                    className="w-20"
-                  />
-                  <span>°C</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Thermometer className="h-5 w-5 text-blue-500" />
-                  <span>Bed Temperature:</span>
-                  <Input
-                    type="number"
-                    value={tempBedTemp}
-                    onChange={(e) => setTempBedTemp(Number(e.target.value))}
-                    className="w-20"
-                  />
-                  <span>°C</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Droplet className="h-5 w-5 text-purple-500" />
-                  <span>Filament Type:</span>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="w-[200px] justify-between"
-                        disabled={printerStatus === "printing"}
-                      >
-                        {tempFilamentType
-                          ? filamentOptions.find(
-                              (filament) => filament.value === tempFilamentType
-                            )?.label
-                          : "Select filament..."}
-                        <ChevronsUpDown className="opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[200px] p-0">
-                      <Command>
-                        <CommandInput
-                          placeholder="Search filament..."
-                          className="h-9"
-                        />
-                        <CommandList className="max-h-[200px] overflow-y-auto">
-                          <CommandEmpty>No filament found.</CommandEmpty>
-                          <CommandGroup>
-                            {filamentOptions.map((filament) => (
-                              <CommandItem
-                                key={filament.value}
-                                value={filament.value}
-                                onSelect={(value) => {
-                                  handleFilamentChange(value);
-                                }}
-                              >
-                                <div>
-                                  {filament.label}
-                                  <p className="text-sm text-gray-500">
-                                    {filament.description}
-                                  </p>
-                                </div>
-                                <Check
-                                  className={cn(
-                                    "ml-auto",
-                                    tempFilamentType === filament.value
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FastForward className="h-5 w-5 text-yellow-500" />
-                  <span>Print Speed:</span>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="w-[200px] justify-between"
-                      >
-                        {tempPrintSpeed.toString()
-                          ? printSpeedOptions.find(
-                              (speed) =>
-                                speed.value === tempPrintSpeed.toString()
-                            )?.label
-                          : "Select speed..."}
-                        <ChevronsUpDown className="opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[200px] p-0">
-                      <Command>
-                        <CommandInput
-                          placeholder="Search speed..."
-                          className="h-9"
-                        />
-                        <CommandList className="max-h-[200px] overflow-y-auto">
-                          <CommandEmpty>No speed found.</CommandEmpty>
-                          <CommandGroup>
-                            {printSpeedOptions.map((speed) => (
-                              <CommandItem
-                                key={speed.value}
-                                value={speed.value}
-                                onSelect={(value) => {
-                                  handlePrintSpeedChange(value);
-                                }}
-                              >
-                                <div>
-                                  {speed.label}
-                                  <p className="text-sm text-gray-500">
-                                    {speed.description}
-                                  </p>
-                                </div>
-                                <Check
-                                  className={cn(
-                                    "ml-auto",
-                                    tempPrintSpeed.toString() === speed.value
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  {customSpeed !== null && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Thermometer className="h-5 w-5 text-red-500" />
+                    <span>Hotend Temperature:</span>
                     <Input
                       type="number"
-                      value={customSpeed}
-                      onChange={(e) => {
-                        const value = Number(e.target.value);
-                        setCustomSpeed(value);
-                        setTempPrintSpeed(value);
-                      }}
-                      className="w-20 ml-2"
+                      value={tempHotendTemp}
+                      onChange={(e) =>
+                        setTempHotendTemp(Number(e.target.value))
+                      }
+                      className="w-20"
                     />
-                  )}
-                  {customSpeed !== null && <span>%</span>}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Fan className="h-5 w-5 text-cyan-500" />
-                  <span>Fan Speed:</span>
-                  <Input
-                    type="number"
-                    value={tempFanSpeed}
-                    onChange={(e) => setTempFanSpeed(Number(e.target.value))}
-                    className="w-20"
-                    min="0"
-                    max="100"
-                  />
-                  <span>%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Lightbulb className="h-5 w-5 text-amber-500" />
-                  <span>Printer Light:</span>
-                  <Button
-                    variant={tempLightOn ? "default" : "outline"}
-                    onClick={() => setTempLightOn(!tempLightOn)}
-                  >
-                    {tempLightOn ? "On" : "Off"}
-                  </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-orange-500" />
-                  <span>Print Time:</span>
-                  <span className="font-semibold">{printTime}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-teal-500" />
-                  <span>Estimated Time Left:</span>
-                  <span className="font-semibold">{estimatedTimeLeft}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-gray-500" />
-                  <span>Started by:</span>
-                  <span className="font-semibold">{startedBy}</span>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="bg-secondary rounded-md p-2 flex justify-center items-center">
-                  <div className="relative aspect-video w-full max-w-full rounded-md overflow-hidden">
-                    {showGCode && gcodeUrl ? (
-                      <GCodeViewer
-                        orbitControls
-                        showAxes
-                        style={{
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
+                    <span>°C</span>
+                  </div>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Thermometer className="h-5 w-5 text-blue-500" />
+                    <span>Bed Temperature:</span>
+                    <Input
+                      type="number"
+                      value={tempBedTemp}
+                      onChange={(e) => setTempBedTemp(Number(e.target.value))}
+                      className="w-20"
+                    />
+                    <span>°C</span>
+                  </div>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Droplet className="h-5 w-5 text-purple-500" />
+                    <span>Filament Type:</span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-[200px] justify-between"
+                          disabled={printerStatus === "printing"}
+                        >
+                          {tempFilamentType
+                            ? filamentOptions.find(
+                                (filament) =>
+                                  filament.value === tempFilamentType
+                              )?.label
+                            : "Select filament..."}
+                          <ChevronsUpDown className="opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[200px] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search filament..."
+                            className="h-9"
+                          />
+                          <CommandList className="max-h-[200px] overflow-y-auto">
+                            <CommandEmpty>No filament found.</CommandEmpty>
+                            <CommandGroup>
+                              {filamentOptions.map((filament) => (
+                                <CommandItem
+                                  key={filament.value}
+                                  value={filament.value}
+                                  onSelect={(value) => {
+                                    handleFilamentChange(value);
+                                  }}
+                                >
+                                  <div>
+                                    {filament.label}
+                                    <p className="text-sm text-gray-500">
+                                      {filament.description}
+                                    </p>
+                                  </div>
+                                  <Check
+                                    className={cn(
+                                      "ml-auto",
+                                      tempFilamentType === filament.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <FastForward className="h-5 w-5 text-yellow-500" />
+                    <span>Print Speed:</span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-[200px] justify-between"
+                        >
+                          {tempPrintSpeed.toString()
+                            ? printSpeedOptions.find(
+                                (speed) =>
+                                  speed.value === tempPrintSpeed.toString()
+                              )?.label
+                            : "Select speed..."}
+                          <ChevronsUpDown className="opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[200px] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search speed..."
+                            className="h-9"
+                          />
+                          <CommandList className="max-h-[200px] overflow-y-auto">
+                            <CommandEmpty>No speed found.</CommandEmpty>
+                            <CommandGroup>
+                              {printSpeedOptions.map((speed) => (
+                                <CommandItem
+                                  key={speed.value}
+                                  value={speed.value}
+                                  onSelect={(value) => {
+                                    handlePrintSpeedChange(value);
+                                  }}
+                                >
+                                  <div>
+                                    {speed.label}
+                                    <p className="text-sm text-gray-500">
+                                      {speed.description}
+                                    </p>
+                                  </div>
+                                  <Check
+                                    className={cn(
+                                      "ml-auto",
+                                      tempPrintSpeed.toString() === speed.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    {customSpeed !== null && (
+                      <Input
+                        type="number"
+                        value={customSpeed}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          setCustomSpeed(value);
+                          setTempPrintSpeed(value);
                         }}
-                        url={gcodeUrl}
-                      />
-                    ) : (
-                      <Image
-                        src={cameraUrl}
-                        alt="Printer live view"
-                        fill
-                        className="rounded-md object-contain"
+                        className="w-20 ml-2"
                       />
                     )}
+                    {customSpeed !== null && <span>%</span>}
                   </div>
-                </div>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Fan className="h-5 w-5 text-cyan-500" />
+                    <span>Fan Speed:</span>
+                    <Input
+                      type="number"
+                      value={tempFanSpeed}
+                      onChange={(e) => setTempFanSpeed(Number(e.target.value))}
+                      className="w-20"
+                      min="0"
+                      max="100"
+                    />
+                    <span>%</span>
+                  </div>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="h-5 w-5 text-amber-500" />
+                    <span>Printer Light:</span>
+                    <Button
+                      variant={tempLightOn ? "default" : "outline"}
+                      onClick={() => setTempLightOn(!tempLightOn)}
+                    >
+                      {tempLightOn ? "On" : "Off"}
+                    </Button>
+                  </div>
+                </motion.div>
+              </div>
+              <div className="space-y-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <div className="bg-secondary rounded-md p-2 flex justify-center items-center">
+                    <div className="relative aspect-video w-full max-w-full rounded-md overflow-hidden">
+                      {liveViewError ? (
+                        <Image
+                          src={fallbackImageUrl}
+                          alt="Printer fallback view"
+                          fill
+                          className="rounded-md object-contain"
+                        />
+                      ) : (
+                        <Image
+                          src={cameraUrl}
+                          alt="Printer live view"
+                          fill
+                          className="rounded-md object-contain"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
                 {printerStatus === "printing" && (
-                  <div className="bg-secondary rounded-md p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-semibold">Print Progress</span>
-                      <span className="font-semibold">{printProgress}%</span>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                  >
+                    <div className="bg-secondary rounded-md p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold">Print Progress</span>
+                        <span className="font-semibold">{printProgress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4">
+                        <motion.div
+                          className="bg-blue-600 h-2.5 rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${printProgress}%` }}
+                          transition={{ duration: 0.5 }}
+                        ></motion.div>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold">Layer Progress</span>
+                        <span className="font-semibold">
+                          {layerProgress} / {totalLayers}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                        <motion.div
+                          className="bg-green-600 h-2.5 rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{
+                            width: `${(layerProgress / totalLayers) * 100}%`,
+                          }}
+                          transition={{ duration: 0.5 }}
+                        ></motion.div>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4">
-                      <div
-                        className="bg-blue-600 h-2.5 rounded-full"
-                        style={{ width: `${printProgress}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-semibold">Layer Progress</span>
-                      <span className="font-semibold">
-                        {layerProgress} / {totalLayers}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                      <div
-                        className="bg-green-600 h-2.5 rounded-full"
-                        style={{
-                          width: `${(layerProgress / totalLayers) * 100}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
+                  </motion.div>
                 )}
               </div>
             </div>
           </DialogDescription>
           <DialogFooter>
             {unsavedChanges && (
-              <Button
-                onClick={handleApplyChanges}
-                className="mr-2 bg-green-500 hover:bg-green-600"
-                variant="secondary"
-              >
-                {isApplying ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Please wait
-                  </>
-                ) : (
-                  <strong>
-                    {printerStatus === "printing"
-                      ? "Apply While Printing"
-                      : "Apply Changes"}
-                  </strong>
-                )}
-              </Button>
+              <motion.div whileTap={{ scale: 0.95 }}>
+                <Button
+                  onClick={handleApplyChanges}
+                  className="mr-2 bg-green-500 hover:bg-green-600"
+                  variant="secondary"
+                >
+                  {isApplying ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Please wait
+                    </>
+                  ) : (
+                    <strong>
+                      {printerStatus === "printing"
+                        ? "Apply While Printing"
+                        : "Apply Changes"}
+                    </strong>
+                  )}
+                </Button>
+              </motion.div>
             )}
-            <Button
-              onClick={handleCloseDetails}
-              variant={unsavedChanges ? "outline" : "secondary"}
-            >
-              <strong>{unsavedChanges ? "Cancel" : "Close"}</strong>
-            </Button>
+            <motion.div whileTap={{ scale: 0.95 }}>
+              <Button
+                onClick={handleCloseDetails}
+                variant={unsavedChanges ? "outline" : "secondary"}
+              >
+                <strong>{unsavedChanges ? "Cancel" : "Close"}</strong>
+              </Button>
+            </motion.div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -770,29 +894,40 @@ export default function PrinterInfoCard({
           </DialogHeader>
           <DialogDescription>
             <div className="grid gap-4">
-              <div className="flex items-center justify-center bg-secondary rounded-md p-4">
-                {gcodeUrl ? (
-                  <GCodeViewer
-                    orbitControls
-                    showAxes
-                    style={{
-                      width: "100%",
-                      height: "300px",
-                    }}
-                    url={gcodeUrl}
-                  />
-                ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <div className="flex items-center justify-center bg-secondary rounded-md p-4">
                   <div className="text-center">
-                    <p>No GCode file uploaded</p>
-                    <Button className="mt-2">
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload GCode File
-                    </Button>
+                    {uploadedFile ? (
+                      <p>{uploadedFile.name}</p>
+                    ) : (
+                      <p>No GCode file uploaded</p>
+                    )}
+                    <label htmlFor="gcodeUpload">
+                      <Button as="span" className="mt-2 cursor-pointer">
+                        <Upload className="mr-2 h-4 w-4" />
+                        {uploadedFile ? "Change File" : "Upload GCode File"}
+                      </Button>
+                    </label>
+                    <input
+                      id="gcodeUpload"
+                      type="file"
+                      accept=".gcode"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
                   </div>
-                )}
-              </div>
+                </div>
+              </motion.div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
                   <label
                     htmlFor="filamentType"
                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -802,6 +937,8 @@ export default function PrinterInfoCard({
                   <select
                     id="filamentType"
                     className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    value={tempFilamentType}
+                    onChange={(e) => handleFilamentChange(e.target.value)}
                   >
                     {filamentOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -809,8 +946,12 @@ export default function PrinterInfoCard({
                       </option>
                     ))}
                   </select>
-                </div>
-                <div>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
                   <label
                     htmlFor="printSpeed"
                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -820,6 +961,8 @@ export default function PrinterInfoCard({
                   <select
                     id="printSpeed"
                     className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    value={tempPrintSpeed.toString()}
+                    onChange={(e) => handlePrintSpeedChange(e.target.value)}
                   >
                     {printSpeedOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -827,7 +970,7 @@ export default function PrinterInfoCard({
                       </option>
                     ))}
                   </select>
-                </div>
+                </motion.div>
               </div>
             </div>
           </DialogDescription>
@@ -841,8 +984,13 @@ export default function PrinterInfoCard({
             <Button
               onClick={handleStartPrint}
               className="bg-green-500 hover:bg-green-600"
+              disabled={!uploadedFile || isLoading["startPrint"]}
             >
-              Start Print
+              {isLoading["startPrint"] ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Start Print"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
