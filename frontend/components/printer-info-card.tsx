@@ -516,7 +516,7 @@ export default function PrinterInfoCard({
                           <>
                             <X className="h-4 w-4 mr-2" />
                             <span className="truncate">
-                              <strong>Cancel</strong>
+                              <strong>Stop Print</strong>
                             </span>
                           </>
                         )}
@@ -1184,7 +1184,7 @@ export default function PrinterInfoCard({
               onClick={() => setShowStartPrintDialog(false)}
               variant="outline"
             >
-              <strong>Cancel</strong>
+              <strong>Stop Print</strong>
             </Button>
             <Button
               onClick={handleStartPrint}
@@ -1207,9 +1207,9 @@ export default function PrinterInfoCard({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel Print</AlertDialogTitle>
+            <AlertDialogTitle>Stop Current Print</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to cancel the current print? This action
+              Are you sure you want to stop the current print? This action
               cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1226,7 +1226,7 @@ export default function PrinterInfoCard({
                 className="bg-red-500 hover:bg-red-600"
                 variant="destructive"
               >
-                <strong>Cancel Print</strong>
+                <strong>Stop Print</strong>
               </Button>
             </AlertDialogAction>
           </AlertDialogFooter>

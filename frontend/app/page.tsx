@@ -208,6 +208,60 @@ export default function Dashboard() {
             </Breadcrumb>
           </div>
           <div className="ml-auto mr-4">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  style={{ marginRight: "25px" }}
+                  className="mx-auto w-40"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Printer
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Printer</DialogTitle>
+                  <DialogDescription>
+                    Enter the details of the new printer you want to add to the
+                    system.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="printerName" className="text-right">
+                      printerName
+                    </Label>
+                    <Input
+                      id="printerName"
+                      value={newPrinterName}
+                      onChange={(e) => setNewPrinterName(e.target.value)}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="printerType" className="text-right">
+                      printerType
+                    </Label>
+                    <Input
+                      id="printerType"
+                      value={newPrinterType}
+                      onChange={(e) => setNewPrinterType(e.target.value)}
+                      className="col-span-3"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    onClick={() =>
+                      handleAddPrinter(newPrinterName, newPrinterType)
+                    }
+                  >
+                    Add Printer
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
             <Button
               variant="outline"
               size="icon"
@@ -284,57 +338,7 @@ export default function Dashboard() {
                 />
               ))}
             </div>
-            <Separator className="my-4" />
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="mx-auto w-40">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Printer
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Printer</DialogTitle>
-                  <DialogDescription>
-                    Enter the details of the new printer you want to add to the
-                    system.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="printerName" className="text-right">
-                      printerName
-                    </Label>
-                    <Input
-                      id="printerName"
-                      value={newPrinterName}
-                      onChange={(e) => setNewPrinterName(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="printerType" className="text-right">
-                      printerType
-                    </Label>
-                    <Input
-                      id="printerType"
-                      value={newPrinterType}
-                      onChange={(e) => setNewPrinterType(e.target.value)}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    onClick={() =>
-                      handleAddPrinter(newPrinterName, newPrinterType)
-                    }
-                  >
-                    Add Printer
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            {/* <Separator className="my-4" /> */}
           </div>
         </ScrollArea>
       </SidebarInset>

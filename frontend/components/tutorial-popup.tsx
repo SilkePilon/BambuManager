@@ -8,6 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  AlignLeft,
+  Info,
   Printer,
   Sliders,
   Play,
@@ -28,6 +30,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const printerTypes = [
   {
@@ -178,60 +191,11 @@ const tutorialSlides = [
     ),
   },
   {
-    title: "Add New Printers",
+    title: "Add your first printer!",
     content:
-      "Click the 'Add Printer' button at the bottom of the dashboard to add a new printer to your fleet. Select the printer type from the dropdown and enter a name for your printer.",
+      "Click the 'Add Printer' button at the top of the dashboard to add a new printer at anytime.",
     icon: <Plus className="h-12 w-12 text-yellow-500" />,
-    example: (
-      <div className="flex w-full max-w-2xl flex-col items-center justify-between">
-        <div className="w-full space-y-4">
-          <Card className="w-full">
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="printer-name">Printer Name</Label>
-                  <Input id="printer-name" placeholder="Enter printer name" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="printer-type">Printer Type</Label>
-                  <Select>
-                    <SelectTrigger id="printer-type">
-                      <SelectValue placeholder="Select printer type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {printerTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button className="w-full">Add Printer</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="mt-4 flex w-full flex-col items-center justify-center">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Image
-              src={"/placeholder.svg?height=400&width=400"}
-              alt={"Selected printer type"}
-              width={400}
-              height={400}
-              className="h-80 w-80 object-contain"
-            />
-          </motion.div>
-          <p className="mt-4 text-center font-semibold">
-            Selected Printer Type
-          </p>
-        </div>
-      </div>
-    ),
+    example: <></>,
   },
 ];
 
@@ -246,7 +210,9 @@ export default function Component({
 }: TutorialPopupProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const { theme } = useTheme();
-  const [newPrinterName, setNewPrinterName] = useState("");
+  const [printerIP, setPrinterIP] = useState("");
+  const [printerSerial, setPrinterSerial] = useState("");
+  const [printerAccessCode, setPrinterAccessCode] = useState("");
   const [newPrinterType, setNewPrinterType] = useState("");
 
   const nextSlide = () => {
@@ -260,12 +226,28 @@ export default function Component({
   };
 
   const handleAddPrinter = () => {
-    if (newPrinterName && newPrinterType) {
-      onAddPrinter(newPrinterName, newPrinterType);
-      setNewPrinterName("");
+    if (printerIP && printerSerial && printerAccessCode && newPrinterType) {
+      onAddPrinter(printerIP, newPrinterType);
+      setPrinterIP("");
+      setPrinterSerial("");
+      setPrinterAccessCode("");
       setNewPrinterType("");
       onClose();
     }
+  };
+
+  const isValidIP = (ip: string) => {
+    const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+    return ipRegex.test(ip);
+  };
+
+  const getInputBorderColor = (
+    value: string,
+    validator?: (value: string) => boolean
+  ) => {
+    if (!value) return "border-red-500 border-2";
+    if (validator && !validator(value)) return "border-red-500 border-2";
+    return "border-green-500 border-2";
   };
 
   return (
@@ -279,7 +261,7 @@ export default function Component({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="relative w-full max-w-4xl rounded-xl bg-background p-6 text-foreground shadow-xl"
+        className="relative w-full max-w-5xl rounded-xl bg-background p-8 text-foreground shadow-xl"
       >
         <Button
           variant="ghost"
@@ -300,25 +282,131 @@ export default function Component({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -20, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 gap-6 md:grid-cols-2"
+            className="grid grid-cols-1 gap-8 md:grid-cols-2"
           >
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold">
+            <div className="space-y-6">
+              <h2 className="text-3xl font-bold">
                 {tutorialSlides[currentSlide].title}
               </h2>
-              <p className="text-lg">{tutorialSlides[currentSlide].content}</p>
+              <p className="text-xl">{tutorialSlides[currentSlide].content}</p>
               {currentSlide === tutorialSlides.length - 1 && (
                 <Card className="w-full">
                   <CardContent className="pt-6">
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label htmlFor="new-printer-name">Printer Name</Label>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="printer-ip">Printer IP</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Info className="h-4 w-4" />
+                                <span className="ml-2 underline">
+                                  How to get IP
+                                </span>
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                              <p>
+                                You can find your printer&apos;s IP address in
+                                the printer&apos;s settings menu or by checking
+                                your router&apos;s connected devices list.
+                              </p>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                         <Input
-                          id="new-printer-name"
-                          placeholder="Enter printer name"
-                          value={newPrinterName}
-                          onChange={(e) => setNewPrinterName(e.target.value)}
+                          id="printer-ip"
+                          placeholder="Enter printer IP"
+                          value={printerIP}
+                          onChange={(e) => setPrinterIP(e.target.value)}
+                          className={getInputBorderColor(printerIP, isValidIP)}
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="printer-serial">
+                            Printer Serial Number
+                          </Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Info className="h-4 w-4" />
+                                <span className="ml-2 underline">
+                                  How to get Serial
+                                </span>
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                              <p>
+                                Please visit the{" "}
+                                <a
+                                  href="https://wiki.bambulab.com/en/general/find-sn"
+                                  target="_blank"
+                                  className="underline"
+                                >
+                                  official bambulab wiki
+                                </a>{" "}
+                                to find the serial location for your specific
+                                printer.
+                              </p>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <Input
+                          id="printer-serial"
+                          placeholder="Enter printer serial number"
+                          value={printerSerial}
+                          onChange={(e) => setPrinterSerial(e.target.value)}
+                          className={getInputBorderColor(printerSerial)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="printer-access-code">
+                            Device Access Code
+                          </Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Info className="h-4 w-4" />
+                                <span className="ml-2 underline">
+                                  How to get Access Code
+                                </span>
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                              <p>
+                                The device access code can be found in your
+                                printer&apos;s settings or security menu. For
+                                info for specific printers please visit{" "}
+                                <a
+                                  href="https://intercom.help/octoeverywhere/en/articles/9028357-find-your-bambu-lab-printer-access-code"
+                                  target="_blank"
+                                  className="underline"
+                                >
+                                  this site
+                                </a>
+                              </p>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <InputOTP
+                          maxLength={12}
+                          value={printerAccessCode}
+                          onChange={setPrinterAccessCode}
+                          className={getInputBorderColor(printerAccessCode)}
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                            <InputOTPSlot index={6} />
+                            <InputOTPSlot index={7} />
+                          </InputOTPGroup>
+                        </InputOTP>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="new-printer-type">Printer Type</Label>
@@ -341,7 +429,13 @@ export default function Component({
                       <Button
                         className="w-full"
                         onClick={handleAddPrinter}
-                        disabled={!newPrinterName || !newPrinterType}
+                        disabled={
+                          !printerIP ||
+                          !printerSerial ||
+                          !printerAccessCode ||
+                          !newPrinterType ||
+                          !isValidIP(printerIP)
+                        }
                       >
                         Add Printer
                       </Button>
@@ -362,7 +456,7 @@ export default function Component({
                             ?.image
                         }
                         alt={`${newPrinterType} printer`}
-                        className="h-80 w-80 object-contain"
+                        className="h-96 w-96 object-contain"
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.8, opacity: 0 }}
@@ -374,18 +468,20 @@ export default function Component({
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.8, opacity: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="flex h-80 w-80 flex-col items-center justify-center text-center"
+                        className="flex h-96 w-96 flex-col items-center justify-center text-center"
                       >
-                        <Printer className="h-24 w-24 text-muted-foreground" />
-                        <p className="mt-4 text-lg font-semibold text-muted-foreground">
+                        <AlignLeft className="h-32 w-32 text-muted-foreground" />
+                        <p className="mt-4 text-xl font-semibold text-muted-foreground">
                           Please select a printer from the list
                         </p>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  <p className="mt-4 text-center font-semibold">
-                    {newPrinterType || "Selected Printer Type"}
-                  </p>
+                  {newPrinterType && (
+                    <p className="mt-4 text-center text-xl font-semibold">
+                      {newPrinterType || ""}
+                    </p>
+                  )}
                 </div>
               ) : (
                 tutorialSlides[currentSlide].example
@@ -393,7 +489,7 @@ export default function Component({
             </div>
           </motion.div>
         </AnimatePresence>
-        <div className="mt-6 flex justify-between">
+        <div className="mt-8 flex justify-between">
           <Button
             onClick={prevSlide}
             disabled={currentSlide === 0}
@@ -413,7 +509,7 @@ export default function Component({
             </Button>
           )}
         </div>
-        <div className="mt-4 flex justify-center">
+        <div className="mt-6 flex justify-center">
           {tutorialSlides.map((_, index) => (
             <div
               key={index}
