@@ -1184,7 +1184,7 @@ export default function PrinterInfoCard({
               onClick={() => setShowStartPrintDialog(false)}
               variant="outline"
             >
-              <strong>Stop Print</strong>
+              <strong>Cancel</strong>
             </Button>
             <Button
               onClick={handleStartPrint}
