@@ -191,9 +191,8 @@ const tutorialSlides = [
     ),
   },
   {
-    title: "Add your first printer!",
-    content:
-      "Click the 'Add Printer' button at the top of the dashboard to add a new printer at anytime.",
+    title: "Let's add your first printer",
+    content: "",
     icon: <Plus className="h-12 w-12 text-yellow-500" />,
     example: <></>,
   },
@@ -273,7 +272,7 @@ export default function Component({
           <span className="sr-only">Close</span>
         </Button>
         <div className="mb-6 flex items-center justify-center">
-          {tutorialSlides[currentSlide].icon}
+          {/* {tutorialSlides[currentSlide].icon} */}
         </div>
         <AnimatePresence mode="wait">
           <motion.div
