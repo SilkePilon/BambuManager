@@ -1147,7 +1147,7 @@ export default function PrinterInfoCard({
                         <p>No GCode file uploaded</p>
                       )}
                       <label htmlFor="gcodeUpload">
-                        <Button as="span" className="mt-2 cursor-pointer">
+                        <Button className="mt-2 cursor-pointer">
                           <Upload className="mr-2 h-4 w-4" />
                           <strong>
                             {uploadedFile ? "Change File" : "Upload GCode File"}

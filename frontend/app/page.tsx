@@ -40,8 +40,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TutorialPopup } from "@/components/tutorial-popup";
 
 interface Printer {
-  name: string;
-  type: string;
+  printerName: string;
+  printerType: string;
+  fallbackImageUrl: string;
   hotendTemp: number;
   bedTemp: number;
   printTime: string;
@@ -62,8 +63,9 @@ interface Printer {
 
 const initialPrinters: Printer[] = [
   {
-    name: "Creeper",
-    type: "P1S",
+    printerName: "Creeper",
+    printerType: "P1S",
+    fallbackImageUrl: "/placeholder.svg?height=200&width=320",
     hotendTemp: 210,
     bedTemp: 60,
     printTime: "1h 30m",
@@ -84,8 +86,9 @@ const initialPrinters: Printer[] = [
     isPrinting: true,
   },
   {
-    name: "Awww",
-    type: "P1S",
+    printerName: "Awww",
+    printerType: "P1S",
+    fallbackImageUrl: "/placeholder.svg?height=200&width=320",
     hotendTemp: 200,
     bedTemp: 55,
     printTime: "2h 15m",
@@ -104,8 +107,9 @@ const initialPrinters: Printer[] = [
     isPrinting: true,
   },
   {
-    name: "Man",
-    type: "A1",
+    printerName: "Man",
+    printerType: "A1",
+    fallbackImageUrl: "/placeholder.svg?height=200&width=320",
     hotendTemp: 0,
     bedTemp: 0,
     printTime: "0m",
@@ -159,10 +163,11 @@ export default function Dashboard() {
   const [newPrinterType, setNewPrinterType] = useState("");
   const [showTutorial, setShowTutorial] = useState(false);
 
-  const handleAddPrinter = (name: string, type: string) => {
+  const handleAddPrinter = (printerName: string, printerType: string) => {
     const newPrinter: Printer = {
-      name,
-      type,
+      printerName,
+      printerType,
+      fallbackImageUrl: "/placeholder.svg?height=200&width=320",
       hotendTemp: 0,
       bedTemp: 0,
       printTime: "0m",
@@ -220,46 +225,59 @@ export default function Dashboard() {
                   key={index}
                   {...printer}
                   onStopPrint={() => {
-                    console.log(`Stopping print for ${printer.name}`);
+                    console.log(`Stopping print for ${printer.printerName}`);
                   }}
                   onHotendTempChange={(temp) => {
                     console.log(
-                      `New hotend temperature for ${printer.name}:`,
+                      `New hotend temperature for ${printer.printerName}:`,
                       temp
                     );
                   }}
                   onBedTempChange={(temp) => {
                     console.log(
-                      `New bed temperature for ${printer.name}:`,
+                      `New bed temperature for ${printer.printerName}:`,
                       temp
                     );
                   }}
                   onLayerHeightChange={(height) => {
                     console.log(
-                      `New layer height for ${printer.name}:`,
+                      `New layer height for ${printer.printerName}:`,
                       height
                     );
                   }}
-                  onFilamentTypeChange={(type) => {
-                    console.log(`New filament type for ${printer.name}:`, type);
+                  onFilamentTypeChange={(printerType) => {
+                    console.log(
+                      `New filament printerType for ${printer.printerName}:`,
+                      printerType
+                    );
                   }}
                   onPrintSpeedChange={(speed) => {
-                    console.log(`New print speed for ${printer.name}:`, speed);
+                    console.log(
+                      `New print speed for ${printer.printerName}:`,
+                      speed
+                    );
                   }}
                   onFanSpeedChange={(speed) => {
-                    console.log(`New fan speed for ${printer.name}:`, speed);
+                    console.log(
+                      `New fan speed for ${printer.printerName}:`,
+                      speed
+                    );
                   }}
                   onLightToggle={(on) => {
                     console.log(
-                      `Light for ${printer.name} turned ${on ? "on" : "off"}`
+                      `Light for ${printer.printerName} turned ${
+                        on ? "on" : "off"
+                      }`
                     );
                   }}
                   onDownloadTimelapse={() => {
-                    console.log(`Downloading timelapse for ${printer.name}`);
+                    console.log(
+                      `Downloading timelapse for ${printer.printerName}`
+                    );
                   }}
                   onUploadGcode={async (file) => {
                     console.log(
-                      `Uploading G-code for ${printer.name}:`,
+                      `Uploading G-code for ${printer.printerName}:`,
                       file.name
                     );
                   }}
@@ -284,22 +302,22 @@ export default function Dashboard() {
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Name
+                    <Label htmlFor="printerName" className="text-right">
+                      printerName
                     </Label>
                     <Input
-                      id="name"
+                      id="printerName"
                       value={newPrinterName}
                       onChange={(e) => setNewPrinterName(e.target.value)}
                       className="col-span-3"
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="type" className="text-right">
-                      Type
+                    <Label htmlFor="printerType" className="text-right">
+                      printerType
                     </Label>
                     <Input
-                      id="type"
+                      id="printerType"
                       value={newPrinterType}
                       onChange={(e) => setNewPrinterType(e.target.value)}
                       className="col-span-3"
