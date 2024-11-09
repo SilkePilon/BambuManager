@@ -15,33 +15,51 @@ import {
   HelpCircle,
   Thermometer,
   Fan,
-  Lightbulb,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { cn } from "@/lib/utils";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import Image from "next/image";
 
-const filamentOptions = [
-  { value: "PLA", label: "PLA", description: "General purpose, easy to print" },
-  { value: "ABS", label: "ABS", description: "Durable, heat-resistant" },
-  { value: "PETG", label: "PETG", description: "Strong, chemical-resistant" },
-  { value: "TPU", label: "TPU", description: "Flexible, impact-resistant" },
-  { value: "Nylon", label: "Nylon", description: "Strong, abrasion-resistant" },
+const printerTypes = [
+  {
+    value: "X1 Carbon",
+    label: "X1 Carbon",
+    image:
+      "https://erasebg.org/media/background-remover/031d91a8-49bd-45c8-a073-56eafce052dc/transparent/114_2_400x.png",
+  },
+  {
+    value: "P1S",
+    label: "P1S",
+    image:
+      "https://eu.store.bambulab.com/cdn/shop/files/P1S_a91816a0-e8da-4fde-aeee-5063b3c58d23_400x.png?v=1719566484",
+  },
+  {
+    value: "P1P",
+    label: "P1P",
+    image:
+      "https://eu.store.bambulab.com/cdn/shop/files/P1P_a4d89e24-eafb-468c-bfa5-acf5c178b9b6_400x.png?v=1719566484",
+  },
+  {
+    value: "A1",
+    label: "A1",
+    image:
+      "https://eu.store.bambulab.com/cdn/shop/files/A1_06418bc8-eb86-4622-ab5f-dab3bfb0dcf7_400x.png?v=1719566483",
+  },
+  {
+    value: "A1 Mini",
+    label: "A1 Mini",
+    image:
+      "https://eu.store.bambulab.com/cdn/shop/files/A1_mini_400x.png?v=1719566482",
+  },
 ];
 
 const tutorialSlides = [
@@ -57,7 +75,6 @@ const tutorialSlides = [
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          {/* <Printer className="h-24 w-24 text-blue-500" /> */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             id="Layer_2"
@@ -163,27 +180,57 @@ const tutorialSlides = [
   {
     title: "Add New Printers",
     content:
-      "Click the 'Add Printer' button at the bottom of the dashboard to add a new printer to your fleet. You'll be prompted to enter the printer's name and type, allowing you to expand your printing capabilities.",
+      "Click the 'Add Printer' button at the bottom of the dashboard to add a new printer to your fleet. Select the printer type from the dropdown and enter a name for your printer.",
     icon: <Plus className="h-12 w-12 text-yellow-500" />,
     example: (
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Add New Printer</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="printer-name">Printer Name</Label>
-              <Input id="printer-name" placeholder="Enter printer name" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="printer-type">Printer Type</Label>
-              <Input id="printer-type" placeholder="Enter printer type" />
-            </div>
-            <Button className="w-full">Add Printer</Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex w-full max-w-2xl flex-col items-center justify-between">
+        <div className="w-full space-y-4">
+          <Card className="w-full">
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="printer-name">Printer Name</Label>
+                  <Input id="printer-name" placeholder="Enter printer name" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="printer-type">Printer Type</Label>
+                  <Select>
+                    <SelectTrigger id="printer-type">
+                      <SelectValue placeholder="Select printer type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {printerTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button className="w-full">Add Printer</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="mt-4 flex w-full flex-col items-center justify-center">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Image
+              src={"/placeholder.svg?height=400&width=400"}
+              alt={"Selected printer type"}
+              width={400}
+              height={400}
+              className="h-80 w-80 object-contain"
+            />
+          </motion.div>
+          <p className="mt-4 text-center font-semibold">
+            Selected Printer Type
+          </p>
+        </div>
+      </div>
     ),
   },
 ];
@@ -193,7 +240,10 @@ interface TutorialPopupProps {
   onAddPrinter: (name: string, type: string) => void;
 }
 
-export function TutorialPopup({ onClose, onAddPrinter }: TutorialPopupProps) {
+export default function Component({
+  onClose,
+  onAddPrinter,
+}: TutorialPopupProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const { theme } = useTheme();
   const [newPrinterName, setNewPrinterName] = useState("");
@@ -221,7 +271,7 @@ export function TutorialPopup({ onClose, onAddPrinter }: TutorialPopupProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
-        className="absolute inset-0 backdrop-blur-sm bg-black bg-opacity-50"
+        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
         onClick={onClose}
       />
       <motion.div
@@ -229,7 +279,7 @@ export function TutorialPopup({ onClose, onAddPrinter }: TutorialPopupProps) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className={`relative w-full max-w-4xl rounded-xl p-6 shadow-xl bg-primary-foreground text-primary-content`}
+        className="relative w-full max-w-4xl rounded-xl bg-background p-6 text-foreground shadow-xl"
       >
         <Button
           variant="ghost"
@@ -238,6 +288,7 @@ export function TutorialPopup({ onClose, onAddPrinter }: TutorialPopupProps) {
           onClick={onClose}
         >
           <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
         </Button>
         <div className="mb-6 flex items-center justify-center">
           {tutorialSlides[currentSlide].icon}
@@ -257,28 +308,88 @@ export function TutorialPopup({ onClose, onAddPrinter }: TutorialPopupProps) {
               </h2>
               <p className="text-lg">{tutorialSlides[currentSlide].content}</p>
               {currentSlide === tutorialSlides.length - 1 && (
-                <div className="space-y-4">
-                  <Input
-                    placeholder="Enter printer name"
-                    value={newPrinterName}
-                    onChange={(e) => setNewPrinterName(e.target.value)}
-                  />
-                  <Input
-                    placeholder="Enter printer type"
-                    value={newPrinterType}
-                    onChange={(e) => setNewPrinterType(e.target.value)}
-                  />
-                  <Button
-                    onClick={handleAddPrinter}
-                    disabled={!newPrinterName || !newPrinterType}
-                  >
-                    Add Printer
-                  </Button>
-                </div>
+                <Card className="w-full">
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="new-printer-name">Printer Name</Label>
+                        <Input
+                          id="new-printer-name"
+                          placeholder="Enter printer name"
+                          value={newPrinterName}
+                          onChange={(e) => setNewPrinterName(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new-printer-type">Printer Type</Label>
+                        <Select
+                          value={newPrinterType}
+                          onValueChange={setNewPrinterType}
+                        >
+                          <SelectTrigger id="new-printer-type">
+                            <SelectValue placeholder="Select printer type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {printerTypes.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        className="w-full"
+                        onClick={handleAddPrinter}
+                        disabled={!newPrinterName || !newPrinterType}
+                      >
+                        Add Printer
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </div>
             <div className="flex items-center justify-center">
-              {tutorialSlides[currentSlide].example}
+              {currentSlide === tutorialSlides.length - 1 ? (
+                <div className="flex flex-col items-center justify-center">
+                  <AnimatePresence mode="wait">
+                    {newPrinterType ? (
+                      <motion.img
+                        key={newPrinterType}
+                        src={
+                          printerTypes.find((t) => t.value === newPrinterType)
+                            ?.image
+                        }
+                        alt={`${newPrinterType} printer`}
+                        className="h-80 w-80 object-contain"
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    ) : (
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex h-80 w-80 flex-col items-center justify-center text-center"
+                      >
+                        <Printer className="h-24 w-24 text-muted-foreground" />
+                        <p className="mt-4 text-lg font-semibold text-muted-foreground">
+                          Please select a printer from the list
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <p className="mt-4 text-center font-semibold">
+                    {newPrinterType || "Selected Printer Type"}
+                  </p>
+                </div>
+              ) : (
+                tutorialSlides[currentSlide].example
+              )}
             </div>
           </motion.div>
         </AnimatePresence>
@@ -307,13 +418,7 @@ export function TutorialPopup({ onClose, onAddPrinter }: TutorialPopupProps) {
             <div
               key={index}
               className={`mx-1 h-2 w-2 rounded-full ${
-                index === currentSlide
-                  ? theme === "dark"
-                    ? "bg-primary"
-                    : "bg-primary"
-                  : theme === "dark"
-                  ? "bg-gray-200"
-                  : "bg-gray-200"
+                index === currentSlide ? "bg-primary" : "bg-secondary"
               }`}
             />
           ))}

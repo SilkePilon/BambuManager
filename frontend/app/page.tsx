@@ -37,7 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
-import { TutorialPopup } from "@/components/tutorial-popup";
+import TutorialPopup from "@/components/tutorial-popup";
 
 interface Printer {
   printerName: string;
