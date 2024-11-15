@@ -33,7 +33,6 @@ import Image from "next/image";
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import {
@@ -250,7 +249,7 @@ export default function Component({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
       <div
         className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
         onClick={onClose}
@@ -260,7 +259,7 @@ export default function Component({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="relative w-full max-w-5xl rounded-xl bg-background p-8 text-foreground shadow-xl"
+        className="relative w-full max-w-5xl rounded-xl bg-background p-4 text-foreground shadow-xl sm:p-8"
       >
         <Button
           variant="ghost"
@@ -272,7 +271,7 @@ export default function Component({
           <span className="sr-only">Close</span>
         </Button>
         <div className="mb-6 flex items-center justify-center">
-          {/* {tutorialSlides[currentSlide].icon} */}
+          {tutorialSlides[currentSlide].icon}
         </div>
         <AnimatePresence mode="wait">
           <motion.div
@@ -284,10 +283,12 @@ export default function Component({
             className="grid grid-cols-1 gap-8 md:grid-cols-2"
           >
             <div className="space-y-6">
-              <h2 className="text-3xl font-bold">
+              <h2 className="text-2xl font-bold sm:text-3xl">
                 {tutorialSlides[currentSlide].title}
               </h2>
-              <p className="text-xl">{tutorialSlides[currentSlide].content}</p>
+              <p className="text-lg sm:text-xl">
+                {tutorialSlides[currentSlide].content}
+              </p>
               {currentSlide === tutorialSlides.length - 1 && (
                 <Card className="w-full">
                   <CardContent className="pt-6">
@@ -297,7 +298,10 @@ export default function Component({
                           <Label htmlFor="printer-ip">Printer IP</Label>
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button variant="ghost" size="sm">
+                              <Button
+                                variant="ghost"
+                                className="h-8 px-2 text-sm"
+                              >
                                 <Info className="h-4 w-4" />
                                 <span className="ml-2 underline">
                                   How to get IP
@@ -328,7 +332,10 @@ export default function Component({
                           </Label>
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button variant="ghost" size="sm">
+                              <Button
+                                variant="ghost"
+                                className="h-8 px-2 text-sm"
+                              >
                                 <Info className="h-4 w-4" />
                                 <span className="ml-2 underline">
                                   How to get Serial
@@ -341,6 +348,7 @@ export default function Component({
                                 <a
                                   href="https://wiki.bambulab.com/en/general/find-sn"
                                   target="_blank"
+                                  rel="noopener noreferrer"
                                   className="underline"
                                 >
                                   official bambulab wiki
@@ -366,7 +374,10 @@ export default function Component({
                           </Label>
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button variant="ghost" size="sm">
+                              <Button
+                                variant="ghost"
+                                className="h-8 px-2 text-sm"
+                              >
                                 <Info className="h-4 w-4" />
                                 <span className="ml-2 underline">
                                   How to get Access Code
@@ -381,6 +392,7 @@ export default function Component({
                                 <a
                                   href="https://intercom.help/octoeverywhere/en/articles/9028357-find-your-bambu-lab-printer-access-code"
                                   target="_blank"
+                                  rel="noopener noreferrer"
                                   className="underline"
                                 >
                                   this site
@@ -443,7 +455,7 @@ export default function Component({
                 </Card>
               )}
             </div>
-            <div className="flex items-center justify-center">
+            <div className="hidden md:flex items-center justify-center">
               {currentSlide === tutorialSlides.length - 1 ? (
                 <div className="flex flex-col items-center justify-center">
                   <AnimatePresence mode="wait">
