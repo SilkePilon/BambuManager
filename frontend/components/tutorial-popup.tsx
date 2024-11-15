@@ -46,8 +46,7 @@ const printerTypes = [
   {
     value: "X1 Carbon",
     label: "X1 Carbon",
-    image:
-      "https://erasebg.org/media/background-remover/031d91a8-49bd-45c8-a073-56eafce052dc/transparent/114_2_400x.png",
+    image: "eu.store.bambulab.com/cdn/shop/files/114_2_400x.png?v=1728385849",
   },
   {
     value: "P1S",
