@@ -21,6 +21,7 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,97 +64,84 @@ interface Printer {
 
 const initialPrinters: Printer[] = [
   {
-    printerName: "Creeper",
-    printerType: "P1S",
-    fallbackImageUrl: "/placeholder.svg?height=200&width=320",
-    hotendTemp: 210,
-    bedTemp: 60,
-    printTime: "1h 30m",
-    printerStatus: "printing",
-    fanSpeed: 100,
-    lightOn: true,
-    startedBy: "John Doe",
-    cameraUrl:
-      "https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672f3f8b&is=672dee0b&hm=dd80d6687d7f8d33b719b6b65f145c50ec727ac4c4b29b15e922b4d80e3c02d5&",
-    filamentType: "PLA",
-    layerHeight: 0.2,
-    printProgress: 65,
-    layerProgress: 42,
-    totalLayers: 100,
-    estimatedTimeLeft: "45m",
-    gcodeUrl:
-      "https://raw.githubusercontent.com/SilkePilon/BambuManager/refs/heads/main/examples/gcode/1.gcode",
-    isPrinting: true,
-  },
-  {
-    printerName: "Awww",
-    printerType: "P1S",
+    printerName: "Ender 3 Pro",
+    printerType: "FDM",
     fallbackImageUrl: "/placeholder.svg?height=200&width=320",
     hotendTemp: 200,
-    bedTemp: 55,
-    printTime: "2h 15m",
-    printerStatus: "idle",
-    fanSpeed: 100,
+    bedTemp: 60,
+    printTime: "2h 30m",
+    startedBy: "John Doe",
+    cameraUrl: "https://example.com/printer1-stream",
+    filamentType: "PLA",
+    layerHeight: 0.2,
+    printProgress: 45,
+    layerProgress: 50,
+    totalLayers: 100,
+    estimatedTimeLeft: "3h 15m",
+    printerStatus: "printing",
     lightOn: true,
-    startedBy: "Jane Smith",
-    cameraUrl:
-      "https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672f3f8b&is=672dee0b&hm=dd80d6687d7f8d33b719b6b65f145c50ec727ac4c4b29b15e922b4d80e3c02d5&",
-    filamentType: "PETG",
-    layerHeight: 0.15,
-    printProgress: 42,
-    layerProgress: 105,
-    totalLayers: 250,
-    estimatedTimeLeft: "3h 10m",
+    fanSpeed: 100,
     isPrinting: true,
   },
   {
-    printerName: "Man",
-    printerType: "A1",
+    printerName: "Prusa i3 MK3S+",
+    printerType: "FDM",
+    fallbackImageUrl: "/placeholder.svg?height=200&width=320",
+    hotendTemp: 210,
+    bedTemp: 65,
+    printTime: "1h 45m",
+    startedBy: "Jane Smith",
+    cameraUrl: "https://example.com/printer2-stream",
+    filamentType: "PETG",
+    layerHeight: 0.15,
+    printProgress: 30,
+    layerProgress: 30,
+    totalLayers: 150,
+    estimatedTimeLeft: "4h 30m",
+    printerStatus: "printing",
+    lightOn: false,
+    fanSpeed: 80,
+    isPrinting: true,
+  },
+  {
+    printerName: "Elegoo Mars 2 Pro",
+    printerType: "Resin",
     fallbackImageUrl: "/placeholder.svg?height=200&width=320",
     hotendTemp: 0,
     bedTemp: 0,
-    printTime: "0m",
-    printerStatus: "completed",
-    fanSpeed: 100,
-    lightOn: true,
+    printTime: "0h 0m",
+    startedBy: "N/A",
+    cameraUrl: "https://example.com/printer3-stream",
+    filamentType: "Standard Resin",
+    layerHeight: 0.05,
+    printProgress: 0,
+    layerProgress: 0,
+    totalLayers: 0,
+    estimatedTimeLeft: "0h 0m",
+    printerStatus: "idle",
+    lightOn: false,
+    fanSpeed: 0,
+    isPrinting: false,
+  },
+  {
+    printerName: "Creality CR-10",
+    printerType: "FDM",
+    fallbackImageUrl: "/placeholder.svg?height=200&width=320",
+    hotendTemp: 0,
+    bedTemp: 0,
+    printTime: "5h 20m",
     startedBy: "Bob Johnson",
-    cameraUrl:
-      "https://cdn.discordapp.com/attachments/1303822106848526346/1303855215384199290/p1s_2.gif?ex=672f3f8b&is=672dee0b&hm=dd80d6687d7f8d33b719b6b65f145c50ec727ac4c4b29b15e922b4d80e3c02d5&",
+    cameraUrl: "https://example.com/printer4-stream",
     filamentType: "ABS",
     layerHeight: 0.1,
-    printProgress: 80,
-    layerProgress: 160,
+    printProgress: 100,
+    layerProgress: 200,
     totalLayers: 200,
-    estimatedTimeLeft: "15m",
-    isPrinting: true,
-  },
-];
-
-const tutorialSlides = [
-  {
-    title: "Welcome to the 3D Printer Dashboard",
-    content:
-      "This dashboard allows you to monitor and control your 3D printers. Let's go through the main features.",
-  },
-  {
-    title: "Printer Cards",
-    content:
-      "Each card represents a 3D printer. You can see the printer's status, current temperatures, and print progress at a glance.",
-  },
-  {
-    title: "Detailed View",
-    content:
-      "Click on 'Details' to open a detailed view of the printer. Here you can adjust settings like temperature, fan speed, and print speed.",
-  },
-  {
-    title: "Start/Stop Prints",
-    content:
-      "Use the 'Start Print' or 'Cancel' buttons to control your print jobs. You can also upload new G-code files to start a new print.",
-  },
-  {
-    title: "Add New Printers",
-    content:
-      "Click the 'Add Printer' button at the bottom of the dashboard to add a new printer to your fleet.",
+    estimatedTimeLeft: "0h 0m",
+    printerStatus: "completed",
+    lightOn: false,
+    fanSpeed: 0,
+    isPrinting: false,
   },
 ];
 
@@ -162,6 +150,7 @@ export default function Dashboard() {
   const [newPrinterName, setNewPrinterName] = useState("");
   const [newPrinterType, setNewPrinterType] = useState("");
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   const handleAddPrinter = (printerName: string, printerType: string) => {
     const newPrinter: Printer = {
@@ -170,21 +159,27 @@ export default function Dashboard() {
       fallbackImageUrl: "/placeholder.svg?height=200&width=320",
       hotendTemp: 0,
       bedTemp: 0,
-      printTime: "0m",
-      startedBy: "",
-      cameraUrl: "/placeholder.svg?height=200&width=320",
-      filamentType: "",
-      printerStatus: "idle",
-      lightOn: false,
-      fanSpeed: 0,
-      layerHeight: 0,
+      printTime: "0h 0m",
+      startedBy: "N/A",
+      cameraUrl: "https://example.com/new-printer-stream",
+      filamentType: "PLA",
+      layerHeight: 0.2,
       printProgress: 0,
       layerProgress: 0,
       totalLayers: 0,
-      estimatedTimeLeft: "0m",
+      estimatedTimeLeft: "0h 0m",
+      printerStatus: "idle",
+      lightOn: false,
+      fanSpeed: 0,
       isPrinting: false,
     };
     setPrinters([...printers, newPrinter]);
+    setNewPrinterName("");
+    setNewPrinterType("");
+  };
+
+  const toggleAdvancedOptions = () => {
+    setShowAdvancedOptions(!showAdvancedOptions);
   };
 
   return (
@@ -207,13 +202,10 @@ export default function Dashboard() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <div className="ml-auto mr-4">
+          <div className="ml-auto mr-4 flex items-center gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button
-                  style={{ marginRight: "25px" }}
-                  className="mx-auto w-40"
-                >
+                <Button className="w-40">
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Printer
                 </Button>
@@ -222,28 +214,27 @@ export default function Dashboard() {
                 <DialogHeader>
                   <DialogTitle>Add New Printer</DialogTitle>
                   <DialogDescription>
-                    Enter the details of the new printer you want to add to the
-                    system.
+                    Enter the details of the new printer you want to add.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="printerName" className="text-right">
-                      printerName
+                    <Label htmlFor="name" className="text-right">
+                      Name
                     </Label>
                     <Input
-                      id="printerName"
+                      id="name"
                       value={newPrinterName}
                       onChange={(e) => setNewPrinterName(e.target.value)}
                       className="col-span-3"
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="printerType" className="text-right">
-                      printerType
+                    <Label htmlFor="type" className="text-right">
+                      Type
                     </Label>
                     <Input
-                      id="printerType"
+                      id="type"
                       value={newPrinterType}
                       onChange={(e) => setNewPrinterType(e.target.value)}
                       className="col-span-3"
@@ -265,7 +256,21 @@ export default function Dashboard() {
             <Button
               variant="outline"
               size="icon"
+              onClick={toggleAdvancedOptions}
+              aria-label={
+                showAdvancedOptions
+                  ? "Hide Advanced Options"
+                  : "Show Advanced Options"
+              }
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => setShowTutorial(true)}
+              aria-label="Show Tutorial"
             >
               <HelpCircle className="h-4 w-4" />
             </Button>
@@ -280,42 +285,72 @@ export default function Dashboard() {
                   {...printer}
                   onStopPrint={() => {
                     console.log(`Stopping print for ${printer.printerName}`);
+                    const updatedPrinters = [...printers];
+                    updatedPrinters[index] = {
+                      ...printer,
+                      printerStatus: "idle",
+                      isPrinting: false,
+                      printProgress: 0,
+                      layerProgress: 0,
+                      estimatedTimeLeft: "0h 0m",
+                    };
+                    setPrinters(updatedPrinters);
                   }}
                   onHotendTempChange={(temp) => {
                     console.log(
                       `New hotend temperature for ${printer.printerName}:`,
                       temp
                     );
+                    const updatedPrinters = [...printers];
+                    updatedPrinters[index] = { ...printer, hotendTemp: temp };
+                    setPrinters(updatedPrinters);
                   }}
                   onBedTempChange={(temp) => {
                     console.log(
                       `New bed temperature for ${printer.printerName}:`,
                       temp
                     );
+                    const updatedPrinters = [...printers];
+                    updatedPrinters[index] = { ...printer, bedTemp: temp };
+                    setPrinters(updatedPrinters);
                   }}
                   onLayerHeightChange={(height) => {
                     console.log(
                       `New layer height for ${printer.printerName}:`,
                       height
                     );
+                    const updatedPrinters = [...printers];
+                    updatedPrinters[index] = {
+                      ...printer,
+                      layerHeight: height,
+                    };
+                    setPrinters(updatedPrinters);
                   }}
-                  onFilamentTypeChange={(printerType) => {
+                  onFilamentTypeChange={(type) => {
                     console.log(
-                      `New filament printerType for ${printer.printerName}:`,
-                      printerType
+                      `New filament type for ${printer.printerName}:`,
+                      type
                     );
+                    const updatedPrinters = [...printers];
+                    updatedPrinters[index] = { ...printer, filamentType: type };
+                    setPrinters(updatedPrinters);
                   }}
                   onPrintSpeedChange={(speed) => {
                     console.log(
                       `New print speed for ${printer.printerName}:`,
                       speed
                     );
+                    // Note: We're not updating the state here as print speed is not part of our Printer interface
+                    // You may want to add this to the Printer interface if you want to track it
                   }}
                   onFanSpeedChange={(speed) => {
                     console.log(
                       `New fan speed for ${printer.printerName}:`,
                       speed
                     );
+                    const updatedPrinters = [...printers];
+                    updatedPrinters[index] = { ...printer, fanSpeed: speed };
+                    setPrinters(updatedPrinters);
                   }}
                   onLightToggle={(on) => {
                     console.log(
@@ -323,30 +358,48 @@ export default function Dashboard() {
                         on ? "on" : "off"
                       }`
                     );
+                    const updatedPrinters = [...printers];
+                    updatedPrinters[index] = { ...printer, lightOn: on };
+                    setPrinters(updatedPrinters);
                   }}
                   onDownloadTimelapse={() => {
                     console.log(
                       `Downloading timelapse for ${printer.printerName}`
                     );
+                    // Implement timelapse download logic here
                   }}
                   onUploadGcode={async (file) => {
                     console.log(
                       `Uploading G-code for ${printer.printerName}:`,
                       file.name
                     );
+                    // Implement G-code upload logic here
+                    // For now, we'll just simulate starting a new print
+                    const updatedPrinters = [...printers];
+                    updatedPrinters[index] = {
+                      ...printer,
+                      printerStatus: "printing",
+                      isPrinting: true,
+                      printProgress: 0,
+                      layerProgress: 0,
+                      totalLayers: 100, // This would normally be calculated from the G-code
+                      estimatedTimeLeft: "5h 0m", // This would normally be calculated from the G-code
+                      startedBy: "Current User", // This would normally be the logged-in user
+                    };
+                    setPrinters(updatedPrinters);
                   }}
+                  showAdvancedOptions={showAdvancedOptions}
                 />
               ))}
             </div>
-            {/* <Separator className="my-4" /> */}
           </div>
         </ScrollArea>
       </SidebarInset>
       <AnimatePresence>
         {showTutorial && (
           <TutorialPopup
-            onClose={() => setShowTutorial(false)}
             onAddPrinter={handleAddPrinter}
+            onClose={() => setShowTutorial(false)}
           />
         )}
       </AnimatePresence>

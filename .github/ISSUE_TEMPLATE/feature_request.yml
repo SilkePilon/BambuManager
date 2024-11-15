@@ -1,0 +1,35 @@
+name: Feature Request
+description: Request a feature
+title: "[Feature] <Replace this part>"
+labels:
+  - "feature request"
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the feature
+      description: A clear and concise description of what the feature is
+    validations:
+      required: true
+  - type: dropdown
+    id: device
+    attributes:
+      label: What device is this for?
+      options:
+        - All Devices
+        - A1
+        - A1 Mini
+        - P1P
+        - P1S
+        - X1
+        - X1C
+        - X1E
+        - AMS
+        - AMS Lite
+    validations:
+      required: true
+  - type: textarea
+    id: other
+    attributes:
+      label: Other Information
+      description: Anything else we should know?

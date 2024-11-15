@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -86,6 +87,7 @@ interface PrinterInfoCardProps {
   onLightToggle: (on: boolean) => void;
   onDownloadTimelapse?: () => void;
   onUploadGcode: (file: File) => Promise<void>;
+  showAdvancedOptions: boolean;
 }
 
 const filamentOptions = [
@@ -166,6 +168,7 @@ export default function PrinterInfoCard({
   onLightToggle = () => {},
   onDownloadTimelapse = () => {},
   onUploadGcode = async () => {},
+  showAdvancedOptions = false,
 }: PrinterInfoCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [customSpeed, setCustomSpeed] = useState<number | null>(null);
@@ -187,6 +190,11 @@ export default function PrinterInfoCard({
   const [tempFanSpeed, setTempFanSpeed] = useState(fanSpeed);
   const [tempLightOn, setTempLightOn] = useState(lightOn);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [showStartedBy, setShowStartedBy] = useState(showAdvancedOptions);
+
+  useEffect(() => {
+    setShowStartedBy(showAdvancedOptions);
+  }, [showAdvancedOptions]);
 
   useEffect(() => {
     const hasChanges =
@@ -398,13 +406,15 @@ export default function PrinterInfoCard({
                 </span>
               </div>
             </div>
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                Started by
-              </span>
-              <span>{startedBy}</span>
-            </div>
+            {showStartedBy && (
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  Started by
+                </span>
+                <span>{startedBy}</span>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2">
               {printerStatus === "completed" ? (
                 <>
@@ -505,7 +515,6 @@ export default function PrinterInfoCard({
                   {printerStatus === "printing" ? (
                     <motion.div whileTap={{ scale: 0.95 }}>
                       <Button
-                        // variant="destructive"
                         onClick={() => setShowCancelPrintDialog(true)}
                         className="flex items-center justify-center w-full bg-red-500 hover:bg-red-600 text-white"
                         disabled={isLoading["stopPrint"]}
@@ -822,20 +831,14 @@ export default function PrinterInfoCard({
                         ></motion.div>
                       </div>
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-semibold">Layer Progress</span>
-                        <span className="font-semibold">
+                        <span>Layer Progress</span>
+                        <span>
                           {layerProgress} / {totalLayers}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                        <motion.div
-                          className="bg-green-600 h-2.5 rounded-full"
-                          initial={{ width: 0 }}
-                          animate={{
-                            width: `${(layerProgress / totalLayers) * 100}%`,
-                          }}
-                          transition={{ duration: 0.5 }}
-                        ></motion.div>
+                      <div className="flex justify-between items-center">
+                        <span>Estimated Time Left</span>
+                        <span>{estimatedTimeLeft}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -844,36 +847,22 @@ export default function PrinterInfoCard({
             </div>
           </DialogDescription>
           <DialogFooter>
-            {unsavedChanges && (
-              <motion.div whileTap={{ scale: 0.95 }}>
-                <Button
-                  onClick={handleApplyChanges}
-                  className="mr-2 bg-green-500 hover:bg-green-600"
-                  variant="secondary"
-                >
-                  {isApplying ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      <strong>Please wait</strong>
-                    </>
-                  ) : (
-                    <strong>
-                      {printerStatus === "printing"
-                        ? "Apply While Printing"
-                        : "Apply Changes"}
-                    </strong>
-                  )}
-                </Button>
-              </motion.div>
-            )}
-            <motion.div whileTap={{ scale: 0.95 }}>
-              <Button
-                onClick={handleCloseDetails}
-                variant={unsavedChanges ? "outline" : "secondary"}
-              >
-                <strong>{unsavedChanges ? "Cancel" : "Close"}</strong>
-              </Button>
-            </motion.div>
+            <Button variant="outline" onClick={handleCloseDetails}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleApplyChanges}
+              disabled={!unsavedChanges || isApplying}
+            >
+              {isApplying ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Applying...
+                </>
+              ) : (
+                "Apply Changes"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -887,23 +876,17 @@ export default function PrinterInfoCard({
             <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
             <AlertDialogDescription>
               You have unsaved changes. Are you sure you want to close without
-              applying these changes?
+              saving?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
               onClick={() => setShowUnsavedChangesAlert(false)}
             >
-              <strong>Go Back</strong>
+              Cancel
             </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button
-                onClick={handleConfirmClose}
-                className="bg-red-500 hover:bg-red-600"
-                variant="destructive"
-              >
-                <strong>Close Without Saving</strong>
-              </Button>
+            <AlertDialogAction onClick={handleConfirmClose}>
+              Close Without Saving
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -913,288 +896,40 @@ export default function PrinterInfoCard({
         open={showStartPrintDialog}
         onOpenChange={setShowStartPrintDialog}
       >
-        <DialogContent className="max-w-3xl">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Start New Print</DialogTitle>
+            <DialogDescription>
+              Upload a G-code file to start a new print.
+            </DialogDescription>
           </DialogHeader>
-          <DialogDescription>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Droplet className="h-5 w-5 text-purple-500" />
-                    <span>Filament Type:</span>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className="w-[200px] justify-between"
-                        >
-                          {tempFilamentType
-                            ? filamentOptions.find(
-                                (filament) =>
-                                  filament.value === tempFilamentType
-                              )?.label
-                            : "Select filament..."}
-                          <ChevronsUpDown className="opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[200px] p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search filament..."
-                            className="h-9"
-                          />
-                          <CommandList className="max-h-[200px] overflow-y-auto">
-                            <CommandEmpty>No filament found.</CommandEmpty>
-                            <CommandGroup>
-                              {filamentOptions.map((filament) => (
-                                <CommandItem
-                                  key={filament.value}
-                                  value={filament.value}
-                                  onSelect={(value) => {
-                                    handleFilamentChange(value);
-                                  }}
-                                >
-                                  <div>
-                                    {filament.label}
-                                    <p className="text-sm text-gray-500">
-                                      {filament.description}
-                                    </p>
-                                  </div>
-                                  <Check
-                                    className={cn(
-                                      "ml-auto",
-                                      tempFilamentType === filament.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <div className="flex items-center gap-2">
-                    <FastForward className="h-5 w-5 text-yellow-500" />
-                    <span>Print Speed:</span>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className="w-[200px] justify-between"
-                        >
-                          {tempPrintSpeed.toString()
-                            ? printSpeedOptions.find(
-                                (speed) =>
-                                  speed.value === tempPrintSpeed.toString()
-                              )?.label
-                            : "Select speed..."}
-                          <ChevronsUpDown className="opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[200px] p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search speed..."
-                            className="h-9"
-                          />
-                          <CommandList className="max-h-[200px] overflow-y-auto">
-                            <CommandEmpty>No speed found.</CommandEmpty>
-                            <CommandGroup>
-                              {printSpeedOptions.map((speed) => (
-                                <CommandItem
-                                  key={speed.value}
-                                  value={speed.value}
-                                  onSelect={(value) => {
-                                    handlePrintSpeedChange(value);
-                                  }}
-                                >
-                                  <div>
-                                    {speed.label}
-                                    <p className="text-sm text-gray-500">
-                                      {speed.description}
-                                    </p>
-                                  </div>
-                                  <Check
-                                    className={cn(
-                                      "ml-auto",
-                                      tempPrintSpeed.toString() === speed.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    {customSpeed !== null && (
-                      <Input
-                        type="number"
-                        value={customSpeed}
-                        onChange={(e) => {
-                          const value = Number(e.target.value);
-                          setCustomSpeed(value);
-                          setTempPrintSpeed(value);
-                        }}
-                        className="w-20 ml-2"
-                      />
-                    )}
-                    {customSpeed !== null && <span>%</span>}
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Fan className="h-5 w-5 text-cyan-500" />
-                    <span>Fan Speed:</span>
-                    <Input
-                      type="number"
-                      value={tempFanSpeed}
-                      onChange={(e) => setTempFanSpeed(Number(e.target.value))}
-                      className="w-20"
-                      min="0"
-                      max="100"
-                    />
-                    <span>%</span>
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Lightbulb className="h-5 w-5 text-amber-500" />
-                    <span>Printer Light:</span>
-                    <Button
-                      variant={tempLightOn ? "default" : "outline"}
-                      onClick={() => setTempLightOn(!tempLightOn)}
-                    >
-                      <strong>{tempLightOn ? "On" : "Off"}</strong>
-                    </Button>
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Thermometer className="h-5 w-5 text-red-500" />
-                    <span>Hotend Temperature:</span>
-                    <Input
-                      type="number"
-                      value={tempHotendTemp}
-                      onChange={(e) =>
-                        setTempHotendTemp(Number(e.target.value))
-                      }
-                      className="w-20"
-                    />
-                    <span>°C</span>
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Thermometer className="h-5 w-5 text-blue-500" />
-                    <span>Bed Temperature:</span>
-                    <Input
-                      type="number"
-                      value={tempBedTemp}
-                      onChange={(e) => setTempBedTemp(Number(e.target.value))}
-                      className="w-20"
-                    />
-                    <span>°C</span>
-                  </div>
-                </motion.div>
-              </div>
-              <div className="space-y-4">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <div className="flex items-center justify-center bg-secondary rounded-md p-4">
-                    <div className="text-center">
-                      {uploadedFile ? (
-                        <p>{uploadedFile.name}</p>
-                      ) : (
-                        <p>No GCode file uploaded</p>
-                      )}
-                      <label htmlFor="gcodeUpload">
-                        <Button className="mt-2 cursor-pointer">
-                          <Upload className="mr-2 h-4 w-4" />
-                          <strong>
-                            {uploadedFile ? "Change File" : "Upload GCode File"}
-                          </strong>
-                        </Button>
-                      </label>
-                      <input
-                        id="gcodeUpload"
-                        type="file"
-                        accept=".gcode"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  <div className="bg-secondary rounded-md p-4">
-                    <h3 className="font-semibold mb-2">Print Information</h3>
-                    <p>Estimated Print Time: {estimatedTimeLeft}</p>
-                    <p>Total Layers: {totalLayers}</p>
-                    <p>Layer Height: {layerHeight}mm</p>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </DialogDescription>
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="gcode">G-code File</Label>
+            <Input
+              id="gcode"
+              type="file"
+              accept=".gcode"
+              onChange={handleFileUpload}
+            />
+          </div>
           <DialogFooter>
             <Button
-              onClick={() => setShowStartPrintDialog(false)}
               variant="outline"
+              onClick={() => setShowStartPrintDialog(false)}
             >
-              <strong>Cancel</strong>
+              Cancel
             </Button>
             <Button
               onClick={handleStartPrint}
-              className="bg-green-500 hover:bg-green-600"
               disabled={!uploadedFile || isLoading["startPrint"]}
             >
               {isLoading["startPrint"] ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Starting...
+                </>
               ) : (
-                <strong>Start Print</strong>
+                "Start Print"
               )}
             </Button>
           </DialogFooter>
@@ -1207,27 +942,23 @@ export default function PrinterInfoCard({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Stop Current Print</AlertDialogTitle>
+            <AlertDialogTitle>Cancel Print</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to stop the current print? This action
+              Are you sure you want to cancel the current print? This action
               cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setShowCancelPrintDialog(false)}>
-              <strong>Go Back</strong>
+              No, Continue Printing
             </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button
-                onClick={() => {
-                  setShowCancelPrintDialog(false);
-                  onStopPrint();
-                }}
-                className="bg-red-500 hover:bg-red-600"
-                variant="destructive"
-              >
-                <strong>Cancel Print</strong>
-              </Button>
+            <AlertDialogAction
+              onClick={() => {
+                onStopPrint();
+                setShowCancelPrintDialog(false);
+              }}
+            >
+              Yes, Cancel Print
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

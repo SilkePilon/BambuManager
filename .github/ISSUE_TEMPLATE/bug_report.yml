@@ -1,0 +1,63 @@
+name: Bug report
+description: Create a report to help us improve
+title: "[Bug] <Replace this part>"
+labels:
+  - bug
+body:
+  - type: input
+    id: bambumanager-version
+    attributes:
+      label: BambuManager Version
+      description: The version of this BambuManager ui you're using (can be found by pressing the ? icon in the top right of the site)
+      placeholder: v1.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: To Reproduce
+      description: How can we replicate this?
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behaviour
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: dropdown
+    id: device
+    attributes:
+      label: What device are you using?
+      options:
+        - All Devices
+        - A1
+        - A1 Mini
+        - P1P
+        - P1S
+        - X1
+        - X1C
+        - X1E
+        - AMS
+        - AMS Lite
+    validations:
+      required: true
+  - type: textarea
+    id: other
+    attributes:
+      label: Other Information
+      description: Anything else we should know?
