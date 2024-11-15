@@ -205,7 +205,7 @@ export default function Dashboard() {
           <div className="ml-auto mr-4 flex items-center gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="w-40">
+                <Button variant={"outline"} className="w-40">
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Printer
                 </Button>

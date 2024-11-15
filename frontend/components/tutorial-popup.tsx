@@ -46,7 +46,8 @@ const printerTypes = [
   {
     value: "X1 Carbon",
     label: "X1 Carbon",
-    image: "eu.store.bambulab.com/cdn/shop/files/114_2_400x.png?v=1728385849",
+    image:
+      "https://eu.store.bambulab.com/cdn/shop/files/114_2_400x.png?v=1728385849",
   },
   {
     value: "P1S",
