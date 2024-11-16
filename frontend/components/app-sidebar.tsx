@@ -60,13 +60,19 @@ const data = {
     },
     {
       title: "Overview",
-      url: "#",
+      url: "/",
       icon: Home,
-      isActive: true,
+      isActive: false,
     },
     {
       title: "Monitor Mode",
       url: "#",
+      icon: Inbox,
+      badge: "10",
+    },
+    {
+      title: "Farm Mode",
+      url: "/farm",
       icon: Inbox,
       badge: "10",
     },

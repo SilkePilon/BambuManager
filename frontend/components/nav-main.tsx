@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import { type LucideIcon } from "lucide-react"
+import { type LucideIcon } from "lucide-react";
 
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 export function NavMain({
   items,
 }: {
   items: {
-    title: string
-    url: string
-    icon: LucideIcon
-    isActive?: boolean
-  }[]
+    title: string;
+    url: string;
+    icon: LucideIcon;
+    isActive?: boolean;
+  }[];
 }) {
   return (
     <SidebarMenu>
@@ -25,11 +25,13 @@ export function NavMain({
           <SidebarMenuButton asChild isActive={item.isActive}>
             <a href={item.url}>
               <item.icon />
-              <span>{item.title}</span>
+              <span>
+                <strong>{item.title}</strong>
+              </span>
             </a>
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}
     </SidebarMenu>
-  )
+  );
 }
